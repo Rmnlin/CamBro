@@ -1,0 +1,92 @@
+import uuid
+from django.db import models
+from django.contrib.auth.models import User
+
+class Category(models.Model):
+    category_id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    name = models.CharField(max_length=100)
+    slug = models.SlugField(unique=True)
+    icon = models.CharField(max_length=50, default='📦')
+    
+    class Meta:
+        verbose_name_plural = 'Categories'
+        ordering = ['name']
+    
+    def __str__(self):
+        return self.name
+
+class Item(models.Model):
+    CONDITION_CHOICES = [
+        ('new', 'ใหม่'),
+        ('good', 'ดี'),
+        ('fair', 'พอใช้'),
+    ]
+    
+    STATUS_CHOICES = [
+        ('active', 'ใช้งาน'),
+        ('borrowed', 'ถูกยืม'),
+        ('inactive', 'ไม่ใช้งาน'),
+    ]
+    
+    CAMPUS_CHOICES = [
+        ('rangsit', 'รังสิต'),
+        ('tha_prachan', 'ท่าพระจันทร์'),
+        ('lampang', 'ลำปาง'),
+    ]
+    
+    item_id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    owner = models.ForeignKey(User, on_delete=models.CASCADE, related_name='items')
+    category = models.ForeignKey(Category, on_delete=models.SET_NULL, null=True)
+    
+    title = models.CharField(max_length=200)
+    description = models.TextField()
+    photo = models.ImageField(upload_to='items/', blank=True, null=True)
+    condition = models.CharField(max_length=10, choices=CONDITION_CHOICES, default='good')
+    
+    is_free = models.BooleanField(default=True)
+    deposit_amount = models.DecimalField(max_digits=8, decimal_places=2, default=0)
+    max_days = models.IntegerField(default=7)
+    
+    campus = models.CharField(max_length=20, choices=CAMPUS_CHOICES, default='rangsit')
+    pickup_location = models.CharField(max_length=200)
+    
+    is_available = models.BooleanField(default=True)
+    status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='active')
+    
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        ordering = ['-created_at']
+    
+    def __str__(self):
+        return self.title
+
+class BorrowRequest(models.Model):
+    STATUS_CHOICES = [
+        ('pending', 'รอดำเนินการ'),
+        ('approved', 'อนุมัติ'),
+        ('declined', 'ปฏิเสธ'),
+        ('active', 'กำลังยืม'),
+        ('returned', 'คืนแล้ว'),
+    ]
+    
+    request_id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    item = models.ForeignKey(Item, on_delete=models.CASCADE, related_name='requests')
+    borrower = models.ForeignKey(User, on_delete=models.CASCADE, related_name='borrow_requests')
+    lender = models.ForeignKey(User, on_delete=models.CASCADE, related_name='lend_requests')
+    
+    start_date = models.DateField()
+    end_date = models.DateField()
+    borrower_message = models.TextField(blank=True)
+    
+    status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='pending')
+    
+    created_at = models.DateTimeField(auto_now_add=True)
+    approved_at = models.DateTimeField(null=True, blank=True)
+    
+    class Meta:
+        ordering = ['-created_at']
+    
+    def __str__(self):
+        return f"{self.borrower.username} -> {self.item.title}"
