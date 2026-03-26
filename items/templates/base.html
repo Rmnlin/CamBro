@@ -27,13 +27,13 @@
                 <div class="flex gap-4 items-center">
                     <a href="/" class="text-gray-700 hover:text-tu-red">หน้าหลัก</a>
                     {% if user.is_authenticated %}
-                        <a href="{% url 'create_item' %}" class="bg-tu-red text-white px-4 py-2 rounded hover:bg-red-700">+ โพสต์ของ</a>
+                        <a href="{% url 'create_item' %}" class="bg-tu-red text-white px-4 py-2 rounded-full shadow-sm hover:bg-red-700">+ โพสต์ของ</a>
                         <a href="{% url 'dashboard' %}" class="text-gray-700 hover:text-tu-red">Dashboard</a>
                         <span class="text-gray-700 text-sm">สวัสดี, <strong>{{ user.username }}</strong></span>
                         <a href="{% url 'logout' %}" class="text-gray-600 hover:text-tu-red text-sm">ออกจากระบบ</a>
                     {% else %}
                         <a href="{% url 'login' %}" class="text-gray-700 hover:text-tu-red">เข้าสู่ระบบ</a>
-                        <a href="{% url 'register' %}" class="bg-tu-red text-white px-4 py-2 rounded hover:bg-red-700">สมัครสมาชิก</a>
+                        <a href="{% url 'register' %}" class="bg-tu-red text-white px-5 py-2 rounded hover:bg-red-700">สมัครสมาชิก</a>
                     {% endif %}
                 </div>
             </div>
