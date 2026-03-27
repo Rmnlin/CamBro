@@ -18,9 +18,9 @@
     </div>
     
     <div class="flex gap-3 mb-6 overflow-x-auto pb-2">
-        <a href="/" class="px-4 py-2 rounded-full {% if not selected_category %}bg-tu-red text-white{% else %}bg-gray-200 text-gray-700{% endif %} whitespace-nowrap">ทั้งหมด</a>
+        <a href="/" class="px-4 py-2 rounded-full transition {% if not selected_category %}bg-main-blue text-white shadow-sm{% else %}bg-gray-100 text-gray-600 hover:bg-gray-200{% endif %} whitespace-nowrap">ทั้งหมด</a>
         {% for category in categories %}
-            <a href="?category={{ category.slug }}" class="px-4 py-2 rounded-full {% if selected_category == category.slug %}bg-tu-red text-white{% else %}bg-gray-200 text-gray-700{% endif %} whitespace-nowrap">
+            <a href="?category={{ category.slug }}" class="px-4 py-2 rounded-full transition {% if selected_category == category.slug %}bg-main-blue text-white shadow-sm{% else %}bg-gray-100 text-gray-600 hover:bg-gray-200{% endif %} whitespace-nowrap">
                 {{ category.icon }} {{ category.name }}
             </a>
         {% endfor %}
@@ -54,10 +54,14 @@
                 </div>
             </div>
         {% empty %}
-            <div class="col-span-full text-center py-12">
-                <p class="text-gray-500 text-lg">ยังไม่มีสิ่งของในหมวดหมู่นี้</p>
+            <div class="col-span-full flex flex-col items-center justify-center py-16 bg-gray-50 rounded-2xl border-2 border-dashed border-gray-200">
+                <div class="text-6xl mb-4">📦</div>
+                <h3 class="text-xl font-bold text-gray-800 mb-2">ยังไม่มีสิ่งของในหมวดหมู่นี้</h3>
+                <p class="text-gray-500 mb-6 text-center">มาเป็นคนแรกที่แบ่งปันสิ่งของ<br>ให้เพื่อน ๆ ยืมกันเถอะ!</p>
+                <a href="{% url 'create_item' %}" class="bg-main-blue text-white px-6 py-3 rounded-lg font-semibold shadow-sm hover:opacity-80 transition inline-block">
+                    + โพสต์สิ่งของชิ้นแรก
+                </a>
             </div>
-        {% endfor %}
-    </div>
+        {% endfor %} </div>
 </div>
 {% endblock %}

@@ -68,7 +68,7 @@
     <section>
         <div class="flex justify-between items-center mb-4">
             <h2 class="text-lg font-semibold text-gray-800">ของที่ฉันโพสต์</h2>
-            <a href="{% url 'create_item' %}" class="bg-tu-red text-white px-4 py-2 rounded-lg text-sm hover:bg-red-700">
+            <a href="{% url 'create_item' %}" class="bg-main-blue text-white px-4 py-2 rounded-lg text-sm shadow-sm hover:opacity-80 transition">
                 + โพสต์ของใหม่
             </a>
         </div>
@@ -89,7 +89,7 @@
                             {{ item.get_status_display }}
                         </span>
                         <a href="{% url 'item_detail' item.item_id %}"
-                            class="text-tu-red text-sm hover:underline">ดู</a>
+                            class="text-main-blue font-medium text-sm hover:underline">ดู</a>
                         <a href="{% url 'delete_item' item.item_id %}"
                             class="text-red-500 text-sm hover:underline">ลบ</a>
                     </div>

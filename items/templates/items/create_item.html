@@ -101,8 +101,70 @@
                 class="w-full px-4 py-2 border rounded-lg text-sm text-gray-600">
         </div>
 
+        <div class="border-t border-gray-200 pt-5 mt-5">
+            <h3 class="text-lg font-semibold text-main-blue flex items-center gap-2 mb-2">
+                 แพ็กเกจประกันภัย (ทางเลือก)
+            </h3>
+            <p class="text-xs text-gray-500 mb-4">*ไม่ครอบคลุมกรณีสูญหายในทุกแพ็กเกจ เงื่อนไขเป็นไปตามนโยบายแพลตฟอร์ม</p>
+
+            <div class="space-y-3">
+                <label class="flex items-start gap-3 p-4 border rounded-xl cursor-pointer hover:border-main-blue transition-all group has-[:checked]:border-main-blue has-[:checked]:bg-blue-50">
+                    <input type="radio" name="insurance_plan" value="none" checked class="mt-1 w-4 h-4 text-main-blue focus:ring-main-blue">
+                    <div>
+                        <span class="block font-medium text-gray-900">ไม่ต้องการประกันภัย</span>
+                        <span class="block text-xs text-gray-500">ผู้ให้ยืมรับความเสี่ยงเองกรณีเกิดความเสียหาย</span>
+                    </div>
+                </label>
+
+                <label class="flex items-start gap-3 p-4 border rounded-xl cursor-pointer hover:border-main-blue transition-all group has-[:checked]:border-main-blue has-[:checked]:bg-blue-50">
+                    <input type="radio" name="insurance_plan" value="basic" class="mt-1 w-4 h-4 text-main-blue focus:ring-main-blue">
+                    <div class="flex-1">
+                        <div class="flex justify-between items-center mb-1">
+                            <span class="block font-medium text-gray-900">1. Basic Plan</span>
+                            <span class="block font-bold text-main-blue">฿49</span>
+                        </div>
+                        <ul class="text-xs text-gray-600 space-y-1 list-disc list-inside">
+                            <li>คุ้มครองความเสียหายทั่วไป ระดับเล็กน้อยถึงปานกลาง</li>
+                            <li>ผู้ยืมชำระค่าเสียหาย 60% ของมูลค่าจริง</li>
+                            <li>คุ้มครองสูงสุด 5,000 บาท (7 วัน)</li>
+                        </ul>
+                    </div>
+                </label>
+
+                <label class="flex items-start gap-3 p-4 border rounded-xl cursor-pointer hover:border-main-blue transition-all group has-[:checked]:border-main-blue has-[:checked]:bg-blue-50">
+                    <input type="radio" name="insurance_plan" value="standard" class="mt-1 w-4 h-4 text-main-blue focus:ring-main-blue">
+                    <div class="flex-1">
+                        <div class="flex justify-between items-center mb-1">
+                            <span class="block font-medium text-gray-900">2. Standard Plan</span>
+                            <span class="block font-bold text-main-blue">฿129</span>
+                        </div>
+                        <ul class="text-xs text-gray-600 space-y-1 list-disc list-inside">
+                            <li>คุ้มครองความเสียหายเล็กน้อยถึงรุนแรง จากอุบัติเหตุ</li>
+                            <li>ผู้ยืมชำระค่าเสียหาย 30% ของมูลค่าจริง</li>
+                            <li>คุ้มครองสูงสุด 10,000 บาท (14 วัน) ส่งซ่อมได้ 1 ครั้ง</li>
+                        </ul>
+                    </div>
+                </label>
+
+                <label class="flex items-start gap-3 p-4 border rounded-xl cursor-pointer hover:border-main-blue transition-all group has-[:checked]:border-main-blue has-[:checked]:bg-blue-50">
+                    <input type="radio" name="insurance_plan" value="premium" class="mt-1 w-4 h-4 text-main-blue focus:ring-main-blue">
+                    <div class="flex-1">
+                        <div class="flex justify-between items-center mb-1">
+                            <span class="block font-medium text-gray-900">3. Premium Plan</span>
+                            <span class="block font-bold text-main-blue">฿299</span>
+                        </div>
+                        <ul class="text-xs text-gray-600 space-y-1 list-disc list-inside">
+                            <li>คุ้มครองทุกกรณีจากอุบัติเหตุ (ส่งซ่อม 2 ครั้ง + เงินชดเชย)</li>
+                            <li>ไม่มีค่าความเสียหายส่วนแรก (ผู้ยืมไม่ต้องจ่ายเพิ่ม)</li>
+                            <li>คุ้มครองสูงสุด 20,000 บาท (30 วัน)</li>
+                        </ul>
+                    </div>
+                </label>
+            </div>
+        </div>
+
         <button type="submit"
-            class="w-full bg-tu-red text-white py-3 rounded-lg font-semibold hover:bg-red-700">
+            class="w-full bg-main-blue text-white py-3 rounded-lg font-semibold shadow-sm hover:opacity-80 transition mt-8">
             โพสต์สิ่งของ
         </button>
     </form>
