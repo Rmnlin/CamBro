@@ -1,11 +1,21 @@
+from django.db import models 
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.models import User
 from django.contrib import messages
 from django.utils import timezone
-from .models import Item, Category, BorrowRequest
+from .models import Item, Category, BorrowRequest, ChatRoom, Message, Notification
 
+def create_notification(user, message, link='/dashboard/'):
+    Notification.objects.create(user=user, message=message, link=link)
+
+@login_required
+def mark_notification_read(request, notification_id):
+    notification = get_object_or_404(Notification, id=notification_id, user=request.user)
+    notification.is_read = True
+    notification.save()
+    return redirect('dashboard')
 
 def register_view(request):
     if request.user.is_authenticated:
@@ -96,6 +106,7 @@ def create_item(request):
         deposit_amount = request.POST.get('deposit_amount', 0) or 0
         max_days = request.POST.get('max_days', 7) or 7
         photo = request.FILES.get('photo')
+        insurance_plan = request.POST.get('insurance_plan', 'none')
 
         if not title or not description or not pickup_location or not category_id:
             messages.error(request, 'กรุณากรอกข้อมูลให้ครบ')
@@ -112,6 +123,7 @@ def create_item(request):
                 deposit_amount=deposit_amount,
                 max_days=max_days,
                 photo=photo,
+                insurance_plan=insurance_plan,
             )
             messages.success(request, 'โพสต์สิ่งของสำเร็จ!')
             return redirect('item_detail', item_id=item.item_id)
@@ -137,6 +149,8 @@ def create_request(request, item_id):
             borrower_message=message,
         )
         
+        create_notification(item.owner, f"มีคนสนใจขอยืม {item.title} จากคุณ!")
+
         messages.success(request, 'ส่งคำขอยืมสำเร็จ!')
         return redirect('item_detail', item_id=item.item_id)
     
@@ -151,18 +165,21 @@ def delete_item(request, item_id):
         return redirect('dashboard')
     return render(request, 'items/confirm_delete.html', {'item': item})
 
-
 @login_required
 def dashboard(request):
-    # คำขอยืมของที่ตัวเองโพสต์
+
+    my_borrowing = BorrowRequest.objects.filter(
+        borrower=request.user
+    ).select_related('item', 'lender').order_by('-created_at')
+
     incoming_requests = BorrowRequest.objects.filter(
         lender=request.user
     ).select_related('item', 'borrower').order_by('-created_at')
 
-    # ของที่ตัวเองโพสต์
     my_items = Item.objects.filter(owner=request.user).order_by('-created_at')
 
     return render(request, 'items/dashboard.html', {
+        'my_borrowing': my_borrowing,
         'incoming_requests': incoming_requests,
         'my_items': my_items,
     })
@@ -187,5 +204,110 @@ def approve_request(request, request_id):
     borrow_request.item.is_available = False
     borrow_request.item.save()
     borrow_request.save()
+    create_notification(borrow_request.borrower, f"เย้! เจ้าของอนุมัติให้คุณยืม {borrow_request.item.title} แล้ว")
     messages.success(request, 'อนุมัติคำขอแล้ว')
+    return redirect('dashboard')
+
+
+@login_required
+def start_chat(request, item_id):
+    """ฟังก์ชันสำหรับกดปุ่มแชทจากหน้า Detail เพื่อสร้างหรือเปิดห้องเดิม"""
+    item = get_object_or_404(Item, item_id=item_id)
+    
+    if item.owner == request.user:
+        messages.warning(request, "คุณไม่สามารถแชทกับตัวเองได้")
+        return redirect('item_detail', item_id=item_id)
+
+    chat_room, created = ChatRoom.objects.get_or_create(
+        item=item,
+        borrower=request.user,
+        owner=item.owner
+    )
+    
+    return redirect('chat_room', room_id=chat_room.id)
+
+@login_required
+def chat_room(request, room_id):
+    """หน้าแสดงข้อความในห้องแชท"""
+    chat_room = get_object_or_404(ChatRoom, id=room_id)
+    
+   
+    if request.user != chat_room.borrower and request.user != chat_room.owner:
+        return redirect('item_list')
+
+    if request.method == 'POST':
+        content = request.POST.get('content', '').strip()
+        if content:
+            Message.objects.create(
+                room=chat_room,
+                sender=request.user,
+                content=content
+            )
+           
+            return redirect('chat_room', room_id=chat_room.id)
+
+    messages_list = chat_room.messages.all().order_by('timestamp')
+    
+    return render(request, 'items/chat_room.html', {
+        'chat_room': chat_room,
+        'messages_list': messages_list,
+    })
+
+@login_required
+def inbox(request):
+    
+    chat_rooms = ChatRoom.objects.filter(
+        models.Q(borrower=request.user) | models.Q(owner=request.user)
+    ).select_related('item', 'borrower', 'owner').order_by('-created_at')
+    
+    return render(request, 'items/inbox.html', {'chat_rooms': chat_rooms})
+
+from django.shortcuts import get_object_or_404, redirect
+from django.contrib.auth.decorators import login_required
+from django.contrib import messages
+from .models import BorrowRequest 
+
+@login_required
+def cancel_request(request, request_id):
+   
+    borrow_request = get_object_or_404(BorrowRequest, request_id=request_id, borrower=request.user)
+    
+    if borrow_request.status == 'pending':
+        borrow_request.delete()  
+        messages.success(request, "ยกเลิกคำขอยืมเรียบร้อยแล้ว")
+    else:
+        messages.error(request, "ไม่สามารถยกเลิกได้ เนื่องจากเจ้าของดำเนินการไปแล้ว")
+        
+    return redirect('dashboard')
+
+@login_required
+def return_item(request, request_id):
+   
+    borrow_request = get_object_or_404(BorrowRequest, request_id=request_id, lender=request.user)
+    
+    if borrow_request.status in ['approved', 'returning']:
+       
+        borrow_request.status = 'returned'
+        borrow_request.save()
+
+        item = borrow_request.item
+        item.status = 'active'     
+        item.is_available = True   
+        item.save()
+
+        messages.success(request, f"ได้รับคืน {item.title} เรียบร้อย! ตอนนี้คนอื่นสามารถยืมต่อได้แล้ว")
+    
+    return redirect('dashboard')
+
+@login_required
+def notify_return(request, request_id):
+   
+    borrow_request = get_object_or_404(BorrowRequest, request_id=request_id, borrower=request.user)
+    
+    if borrow_request.status == 'approved':
+        borrow_request.status = 'returning'  
+        borrow_request.save()
+        create_notification(borrow_request.lender, f"{borrow_request.borrower.username} แจ้งว่าส่งคืน {borrow_request.item.title} ให้คุณแล้ว!")
+        messages.success(request, "แจ้งเจ้าของว่าคืนของเรียบร้อยแล้ว รอเจ้าของยืนยันครับ")
+    
     return redirect('dashboard')

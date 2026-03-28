@@ -33,7 +33,22 @@
                 <p class="text-sm text-gray-600">• ยืมได้สูงสุด: {{ item.max_days }} วัน</p>
                 <p class="text-sm text-gray-600">• จุดนัดรับ: {{ item.pickup_location }}</p>
                 <p class="text-sm text-gray-600">• สภาพ: {{ item.get_condition_display }}</p>
-            </div>
+                
+                <div class="mt-3 pt-3 border-t border-gray-200">
+                    <p class="text-sm text-gray-800 font-semibold mb-1"> ประกันภัยที่เลือก:</p>
+                    <p class="text-sm text-gray-600">
+                        {% if item.insurance_plan == 'basic' %} 
+                            Basic Plan (คุ้มครองสูงสุด 5,000฿)
+                        {% elif item.insurance_plan == 'standard' %} 
+                            Standard Plan (คุ้มครองสูงสุด 10,000฿)
+                        {% elif item.insurance_plan == 'premium' %} 
+                            Premium Plan (คุ้มครอง 20,000฿ ไม่มีค่าเสียหายส่วนแรก)
+                        {% else %} 
+                            ไม่มีการประกันภัย (รับความเสี่ยงเองกรณีเกิดความเสียหาย)
+                        {% endif %}
+                    </p>
+                </div>
+                </div>
             
             <div class="mb-6">
                 <h3 class="font-semibold mb-2">รายละเอียด</h3>
@@ -62,15 +77,21 @@
                         ถูกยืมไปแล้ว
                     </button>
                 {% else %}
-                    <a href="{% url 'create_request' item.item_id %}"
-                        class="block text-center w-full bg-tu-red text-white py-3 rounded-lg font-semibold hover:bg-red-700">
-                        ขอยืมสิ่งของนี้
-                    </a>
+                    <div class="flex gap-3">
+                        <a href="{% url 'start_chat' item.item_id %}" 
+                           class="flex-1 text-center bg-white text-[#85d7ff] py-4 rounded-xl font-bold border-2 border-[#85d7ff] hover:bg-blue-50 transition shadow-sm">
+                           💬 แชท
+                        </a>
+                        
+                        <a href="{% url 'create_request' item.item_id %}"
+                           class="flex-[3] text-center bg-[#85d7ff] text-gray-800 py-4 rounded-xl font-bold text-lg hover:bg-[#68c9f5] shadow-md transition">
+                           ขอยืมสิ่งของนี้
+                        </a>
+                    </div>
                 {% endif %}
             {% else %}
-                <a href="{% url 'login' %}?next={{ request.path }}"
-                    class="block text-center w-full bg-tu-red text-white py-3 rounded-lg font-semibold hover:bg-red-700">
-                    เข้าสู่ระบบเพื่อขอยืม
+                <a href="{% url 'login' %}?next={{ request.path }}" 
+                class="block w-full text-center bg-main-blue text-white py-4 rounded-2xl font-bold hover:opacity-90 transition shadow-md">เข้าสู่ระบบเพื่อขอยืม
                 </a>
             {% endif %}
         </div>

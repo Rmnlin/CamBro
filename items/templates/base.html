@@ -25,13 +25,23 @@
                     <span>🎓</span> CamBro
                 </a>
                 <div class="flex gap-4 items-center">
-                    <a href="/" class="text-gray-700 hover:text-tu-red">หน้าหลัก</a>
-                    {% if user.is_authenticated %}
-                        <a href="{% url 'create_item' %}" class="bg-main-blue text-white px-5 py-2 rounded-full shadow-sm hover:opacity-80">+ โพสต์ของ</a>
-                        <a href="{% url 'dashboard' %}" class="text-gray-700 hover:text-tu-red">Dashboard</a>
-                        <span class="text-gray-700 text-sm">สวัสดี, <strong>{{ user.username }}</strong></span>
-                        <a href="{% url 'logout' %}" class="text-gray-600 hover:text-tu-red text-sm">ออกจากระบบ</a>
-                    {% else %}
+    <a href="/" class="text-gray-700 hover:text-main-blue">หน้าหลัก</a>
+    {% if user.is_authenticated %}
+        <a href="{% url 'create_item' %}" class="bg-main-blue text-white px-5 py-2 rounded-full shadow-sm hover:opacity-80">+ โพสต์ของ</a>          
+        <a href="{% url 'inbox' %}" class="text-gray-700 hover:text-main-blue font-semibold">ข้อความ</a>
+        <a href="{% url 'dashboard' %}" class="text-gray-700 hover:text-main-blue">Dashboard</a>
+        
+        <div class="flex items-center gap-3 ml-2 border-l pl-4">
+            <span class="text-gray-700 text-sm">สวัสดี, <strong>{{ user.username }}</strong></span>
+            
+            <form action="{% url 'logout' %}" method="post" class="inline">
+                {% csrf_token %}
+                <button type="submit" class="text-gray-500 hover:text-red-500 text-sm font-medium transition cursor-pointer">
+                    ออกจากระบบ
+                </button>
+            </form>
+        </div>
+    {% else %}
                         <a href="{% url 'login' %}" class="text-gray-700 hover:text-tu-red">เข้าสู่ระบบ</a>
                         <a href="{% url 'register' %}" class="bg-main-blue text-white px-5 py-2 rounded-full shadow-sm hover:opacity-80">สมัครสมาชิก</a>
                     {% endif %}
@@ -39,16 +49,6 @@
             </div>
         </div>
     </nav>
-    
-    {% if messages %}
-        <div class="max-w-7xl mx-auto px-4 py-4">
-            {% for message in messages %}
-                <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded">
-                    {{ message }}
-                </div>
-            {% endfor %}
-        </div>
-    {% endif %}
     
     <main>
         {% block content %}{% endblock %}

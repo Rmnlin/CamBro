@@ -13,4 +13,10 @@ urlpatterns = [
     path('register/', views.register_view, name='register'),
     path('login/', views.login_view, name='login'),
     path('logout/', views.logout_view, name='logout'),
+    path('items/<uuid:item_id>/chat/start/', views.start_chat, name='start_chat'),
+    path('chats/<uuid:room_id>/', views.chat_room, name='chat_room'),
+    path('inbox/', views.inbox, name='inbox'),
+    path('request/<uuid:request_id>/cancel/', views.cancel_request, name='cancel_request'),
+    path('requests/<uuid:request_id>/return/', views.return_item, name='return_item'),
+    path('requests/<uuid:request_id>/notify-return/', views.notify_return, name='notify_return'),
 ]

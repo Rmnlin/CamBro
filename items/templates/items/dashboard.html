@@ -1,103 +1,175 @@
 {% extends 'base.html' %}
 {% block title %}Dashboard - CamBro{% endblock %}
 {% block content %}
-<div class="max-w-4xl mx-auto px-4 py-8">
-    <h1 class="text-2xl font-bold text-gray-900 mb-8">Dashboard ของฉัน</h1>
-
-    {% if messages %}
-        {% for message in messages %}
-            <div class="mb-4 px-4 py-3 rounded text-sm bg-green-100 text-green-700 border border-green-300">
-                {{ message }}
+{% if user.notifications.filter.is_read=False.exists %}
+    <div class="max-w-4xl mx-auto px-4 pt-6">
+        {% for note in user.notifications.filter.is_read=False|dictsortreversed:"created_at"|slice:":3" %}
+        <div class="bg-blue-50 border-l-4 border-main-blue p-4 rounded-r-xl flex justify-between items-center shadow-sm mb-3">
+            <div class="flex items-center gap-3">
+                <span class="text-xl">🔔</span>
+                <p class="text-sm text-blue-800 font-medium">{{ note.message }}</p>
             </div>
+            <form method="POST" action="{% url 'mark_notification_read' note.id %}">
+                {% csrf_token %}
+                <button type="submit" class="text-[10px] bg-white text-main-blue border border-blue-200 px-3 py-1.5 rounded-lg font-bold hover:bg-blue-100 transition uppercase">รับทราบ</button>
+            </form>
+        </div>
         {% endfor %}
+    </div>
     {% endif %}
+<div class="max-w-4xl mx-auto px-4 py-8">
+    <div class="flex justify-between items-center mb-8">
+        <h1 class="text-3xl font-bold text-gray-900">Dashboard ของฉัน</h1>
+        <a href="{% url 'create_item' %}" class="bg-main-blue text-white px-5 py-2.5 rounded-xl font-semibold shadow-sm hover:opacity-80 transition flex items-center gap-2">
+            + โพสต์ของใหม่
+        </a>
+    </div>
 
-    <!-- คำขอยืมที่เข้ามา -->
-    <section class="mb-10">
-        <h2 class="text-lg font-semibold text-gray-800 mb-4">คำขอยืมที่เข้ามา</h2>
-
-        {% if incoming_requests %}
+    <section class="mb-12">
+        <h2 class="text-xl font-bold text-gray-800 mb-5 flex items-center gap-2">📦 ของที่ฉันกำลังยืม</h2>
+        {% if my_borrowing %}
             <div class="space-y-4">
-                {% for req in incoming_requests %}
-                <div class="bg-white rounded-lg shadow p-5 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-                    <div>
-                        <p class="font-semibold text-gray-900">{{ req.item.title }}</p>
-                        <p class="text-sm text-gray-600 mt-1">
-                            ผู้ขอยืม: <strong>{{ req.borrower.username }}</strong> •
-                            {{ req.start_date }} ถึง {{ req.end_date }}
-                        </p>
-                        {% if req.borrower_message %}
-                            <p class="text-sm text-gray-500 mt-1">ข้อความ: {{ req.borrower_message }}</p>
-                        {% endif %}
+                {% for req in my_borrowing %}
+                <div class="bg-white border border-gray-100 rounded-2xl shadow-sm p-5 flex justify-between items-center hover:shadow-md transition">
+                    <div class="flex items-center gap-4">
+                        <div class="w-14 h-14 bg-blue-50 rounded-2xl flex items-center justify-center text-3xl shadow-inner">
+                            {{ req.item.category.icon }}
+                        </div>
+                        <div>
+                            <p class="font-bold text-lg text-gray-900 leading-tight">{{ req.item.title }}</p>
+                            <p class="text-xs text-gray-500 mt-1 uppercase tracking-tight">เจ้าของ: {{ req.lender.username }}</p>
+                            <p class="text-[10px] text-gray-400 font-medium">{{ req.start_date|date:"d M" }} - {{ req.end_date|date:"d M" }}</p>
+                        </div>
                     </div>
-                    <div class="flex items-center gap-3">
+                    
+                    <div class="text-right flex flex-col items-end gap-2">
                         {% if req.status == 'pending' %}
-                            <form method="post" action="{% url 'approve_request' req.request_id %}">
+                            <span class="bg-yellow-50 text-yellow-600 px-4 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-wider">รออนุมัติ</span>
+                            <form action="{% url 'cancel_request' req.request_id %}" method="POST" onsubmit="return confirm('ยืนยันการยกเลิกคำขอ?')">
                                 {% csrf_token %}
-                                <button type="submit"
-                                    class="px-4 py-2 bg-green-600 text-white rounded-lg text-sm hover:bg-green-700">
-                                    อนุมัติ
+                                <button type="submit" class="text-[10px] text-red-400 font-bold hover:underline uppercase tracking-tight">ยกเลิกคำขอ</button>
+                            </form>
+
+                        {% elif req.status == 'approved' %}
+                            <span class="bg-green-50 text-green-600 px-4 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-wider italic">กำลังยืมอยู่</span>
+                            <form action="{% url 'notify_return' req.request_id %}" method="POST">
+                                {% csrf_token %}
+                                <button type="submit" class="bg-main-blue text-white px-4 py-1.5 rounded-lg text-[10px] font-bold hover:opacity-80 transition shadow-sm">
+                                    กดส่งคืนของ
                                 </button>
                             </form>
-                            <form method="post" action="{% url 'decline_request' req.request_id %}">
-                                {% csrf_token %}
-                                <button type="submit"
-                                    class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg text-sm hover:bg-gray-300">
-                                    ปฏิเสธ
-                                </button>
-                            </form>
-                        {% else %}
-                            <span class="px-3 py-1 rounded-full text-sm
-                                {% if req.status == 'approved' %}bg-green-100 text-green-700
-                                {% elif req.status == 'declined' %}bg-red-100 text-red-700
-                                {% elif req.status == 'returned' %}bg-blue-100 text-blue-700
-                                {% else %}bg-gray-100 text-gray-600{% endif %}">
-                                {{ req.get_status_display }}
-                            </span>
+
+                        {% elif req.status == 'returning' %}
+                            <span class="bg-blue-50 text-blue-600 px-4 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-wider">แจ้งคืนแล้ว รอเจ้าของยืนยัน</span>
+                        
+                        {% elif req.status == 'returned' %}
+                            <span class="bg-gray-100 text-gray-500 px-4 py-1.5 rounded-full text-[10px] font-bold uppercase">คืนเรียบร้อยแล้ว</span>
+                        
+                        {% elif req.status == 'declined' %}
+                            <span class="bg-red-50 text-red-600 px-4 py-1.5 rounded-full text-[10px] font-bold uppercase">ปฏิเสธแล้ว</span>
                         {% endif %}
                     </div>
                 </div>
                 {% endfor %}
             </div>
         {% else %}
-            <p class="text-gray-500 text-sm">ยังไม่มีคำขอยืม</p>
+            <div class="bg-gray-50 rounded-2xl p-8 text-center border border-dashed border-gray-200">
+                <p class="text-gray-400 text-sm">คุณยังไม่ได้ไปขอยืมของจากใครเลย</p>
+            </div>
         {% endif %}
     </section>
 
-    <!-- ของที่ฉันโพสต์ -->
-    <section>
-        <div class="flex justify-between items-center mb-4">
-            <h2 class="text-lg font-semibold text-gray-800">ของที่ฉันโพสต์</h2>
-            <a href="{% url 'create_item' %}" class="bg-main-blue text-white px-4 py-2 rounded-lg text-sm shadow-sm hover:opacity-80 transition">
-                + โพสต์ของใหม่
-            </a>
-        </div>
-
-        {% if my_items %}
-            <div class="space-y-3">
-                {% for item in my_items %}
-                <div class="bg-white rounded-lg shadow p-4 flex justify-between items-center">
-                    <div>
-                        <p class="font-medium text-gray-900">{{ item.title }}</p>
-                        <p class="text-sm text-gray-500">{{ item.category.name }} • {{ item.get_campus_display }}</p>
+    <section class="mb-12">
+        <h2 class="text-xl font-bold text-gray-800 mb-5 flex items-center gap-2">🔔 คำขอยืมที่เข้ามา</h2>
+        {% if incoming_requests %}
+            <div class="space-y-4">
+                {% for req in incoming_requests %}
+                <div class="bg-white border border-gray-100 rounded-2xl shadow-sm p-5 flex flex-col md:flex-row md:items-center md:justify-between gap-4 hover:shadow-md transition">
+                    <div class="flex-1">
+                        <div class="flex items-center gap-2 mb-1">
+                            <span class="bg-blue-100 text-main-blue text-[10px] font-bold px-2 py-0.5 rounded-full uppercase">รายการคำขอ</span>
+                            <p class="font-bold text-lg text-gray-900">{{ req.item.title }}</p>
+                        </div>
+                        <p class="text-sm text-gray-600">
+                            ผู้ขอยืม: <span class="font-semibold text-gray-800">{{ req.borrower.username }}</span> • 
+                            <span class="text-gray-500">{{ req.start_date|date:"d M" }} - {{ req.end_date|date:"d M" }}</span>
+                        </p>
+                        {% if req.borrower_message %}
+                            <p class="text-sm bg-gray-50 p-3 rounded-xl text-gray-600 mt-3 italic">" {{ req.borrower_message }} "</p>
+                        {% endif %}
                     </div>
-                    <div class="flex items-center gap-3">
-                        <span class="px-3 py-1 rounded-full text-xs
-                            {% if item.status == 'active' %}bg-green-100 text-green-700
-                            {% elif item.status == 'borrowed' %}bg-yellow-100 text-yellow-700
-                            {% else %}bg-gray-100 text-gray-600{% endif %}">
-                            {{ item.get_status_display }}
-                        </span>
-                        <a href="{% url 'item_detail' item.item_id %}"
-                            class="text-main-blue font-medium text-sm hover:underline">ดู</a>
-                        <a href="{% url 'delete_item' item.item_id %}"
-                            class="text-red-500 text-sm hover:underline">ลบ</a>
+                    
+                    <div class="flex items-center gap-2">
+                        {% if req.status == 'pending' or not req.status %}
+                            <form method="post" action="{% url 'approve_request' req.request_id %}" class="inline">
+                                {% csrf_token %}
+                                <button type="submit" class="px-5 py-2 bg-green-500 text-white rounded-xl font-medium hover:bg-green-600 transition shadow-sm">อนุมัติ</button>
+                            </form>
+                            
+                            <a href="{% url 'start_chat' req.item.item_id %}" class="px-4 py-2 bg-blue-50 text-main-blue rounded-xl font-medium hover:bg-blue-100 transition text-sm">💬 แชท</a>
+
+                            <form method="post" action="{% url 'decline_request' req.request_id %}" class="inline">
+                                {% csrf_token %}
+                                <button type="submit" class="px-5 py-2 bg-gray-100 text-gray-600 rounded-xl font-medium hover:bg-gray-200 transition">ปฏิเสธ</button>
+                            </form>
+                        {% else %}
+                            <div class="flex flex-col items-end gap-2">
+                                <span class="px-4 py-1.5 rounded-full text-sm font-medium 
+                                    {% if req.status == 'approved' %}bg-green-100 text-green-700
+                                    {% elif req.status == 'returning' %}bg-blue-100 text-blue-700
+                                    {% elif req.status == 'returned' %}bg-gray-100 text-gray-500
+                                    {% else %}bg-red-100 text-red-700{% endif %}">
+                                    {{ req.get_status_display }}
+                                </span>
+                                
+                                {% if req.status == 'returning' %}
+                                <form method="post" action="{% url 'return_item' req.request_id %}">{% csrf_token %}
+                                <button type="submit" class="text-[10px] bg-main-blue text-white px-3 py-1.5 rounded-lg font-bold hover:opacity-80 transition shadow-sm" onclick="return confirm('ได้รับของคืนเรียบร้อยแล้วใช่ไหม?')">ยืนยันได้รับคืน
+                                </button>
+                                </form>
+                        {% endif %}
+                            </div>
+                        {% endif %}
                     </div>
                 </div>
                 {% endfor %}
             </div>
         {% else %}
-            <p class="text-gray-500 text-sm">ยังไม่มีของที่โพสต์</p>
+            <div class="bg-gray-50 rounded-2xl p-10 text-center border border-dashed border-gray-200">
+                <p class="text-gray-400 text-sm">ยังไม่มีคำขอยืมเข้ามาในขณะนี้</p>
+            </div>
+        {% endif %}
+    </section>
+
+    <section>
+        <h2 class="text-xl font-bold text-gray-800 mb-5 flex items-center gap-2">📦 ของที่ฉันโพสต์</h2>
+        {% if my_items %}
+            <div class="grid grid-cols-1 gap-3">
+                {% for item in my_items %}
+                <div class="bg-white border border-gray-100 rounded-2xl shadow-sm p-4 flex justify-between items-center hover:bg-blue-50/30 transition">
+                    <div class="flex items-center gap-4">
+                        <div class="w-12 h-12 bg-blue-50 rounded-xl flex items-center justify-center text-2xl">{{ item.category.icon }}</div>
+                        <div>
+                            <p class="font-bold text-gray-900">{{ item.title }}</p>
+                            <p class="text-xs text-gray-500">{{ item.category.name }} • {{ item.get_campus_display }}</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-4">
+                        <span class="px-3 py-1 rounded-full text-xs font-bold {% if item.status == 'active' %}bg-green-100 text-green-700{% else %}bg-orange-100 text-orange-700{% endif %}">
+                            {{ item.get_status_display }}
+                        </span>
+                        <div class="flex gap-3 text-sm font-medium">
+                            <a href="{% url 'item_detail' item.item_id %}" class="text-main-blue hover:underline">ดู</a>
+                            <a href="{% url 'delete_item' item.item_id %}" class="text-red-400 hover:text-red-600 transition" onclick="return confirm('ลบรายการนี้ใช่ไหม?')">ลบ</a>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="bg-gray-50 rounded-2xl p-10 text-center border border-dashed border-gray-200">
+                <p class="text-gray-400">คุณยังไม่ได้โพสต์สิ่งของใด ๆ</p>
+            </div>
         {% endif %}
     </section>
 </div>

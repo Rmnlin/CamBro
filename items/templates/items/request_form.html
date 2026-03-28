@@ -33,13 +33,9 @@
                     placeholder="แนะนำตัว หรือบอกรายละเอียดเพิ่มเติม..."></textarea>
             </div>
             <div class="flex gap-3">
-                <a href="{% url 'item_detail' item.item_id %}"
-                    class="flex-1 text-center py-2 border rounded-lg text-gray-600 hover:bg-gray-50">
-                    ยกเลิก
+                <a href="{% url 'item_detail' item.item_id %}" class="flex-1 text-center bg-gray-50 text-gray-500 py-3 rounded-xl font-bold hover:bg-gray-100 transition border border-gray-100">ยกเลิก
                 </a>
-                <button type="submit"
-                    class="flex-1 bg-tu-red text-white py-2 rounded-lg font-semibold hover:bg-red-700">
-                    ส่งคำขอ
+                <button type="submit" class="flex-1 bg-[#85d7ff] text-gray-800 py-3 rounded-xl font-bold hover:bg-[#74c6ee] transition shadow-sm">ส่งคำขอ
                 </button>
             </div>
         </form>

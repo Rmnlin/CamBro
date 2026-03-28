@@ -7,10 +7,11 @@ class Category(models.Model):
     name = models.CharField(max_length=100)
     slug = models.SlugField(unique=True)
     icon = models.CharField(max_length=50, default='📦')
+    order = models.PositiveIntegerField(default=0, help_text="กำหนดลำดับการแสดงผล")
     
     class Meta:
         verbose_name_plural = 'Categories'
-        ordering = ['name']
+        ordering = ['order', 'name']
     
     def __str__(self):
         return self.name
@@ -46,6 +47,7 @@ class Item(models.Model):
     is_free = models.BooleanField(default=True)
     deposit_amount = models.DecimalField(max_digits=8, decimal_places=2, default=0)
     max_days = models.IntegerField(default=7)
+    insurance_plan = models.CharField(max_length=20, default='none')
     
     campus = models.CharField(max_length=20, choices=CAMPUS_CHOICES, default='rangsit')
     pickup_location = models.CharField(max_length=200)
@@ -90,3 +92,38 @@ class BorrowRequest(models.Model):
     
     def __str__(self):
         return f"{self.borrower.username} -> {self.item.title}"
+class ChatRoom(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    
+    item = models.ForeignKey(Item, on_delete=models.CASCADE, related_name='chat_rooms')
+    
+    borrower = models.ForeignKey(User, on_delete=models.CASCADE, related_name='borrowed_chats')
+    
+    owner = models.ForeignKey(User, on_delete=models.CASCADE, related_name='owned_chats')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"แชทของ {self.item.title} ({self.borrower.username} คุยกับ {self.owner.username})"
+
+class Message(models.Model):
+    room = models.ForeignKey(ChatRoom, on_delete=models.CASCADE, related_name='messages')
+    sender = models.ForeignKey(User, on_delete=models.CASCADE)
+    content = models.TextField()
+    timestamp = models.DateTimeField(auto_now_add=True)
+    is_read = models.BooleanField(default=False)
+
+    class Meta:
+        ordering = ['timestamp'] 
+
+    def __str__(self):
+        return f"{self.sender.username}: {self.content[:20]}"
+    
+class Notification(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='notifications')
+    message = models.CharField(max_length=255)
+    link = models.CharField(max_length=255, blank=True, null=True) 
+    is_read = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Notification for {self.user.username}: {self.message}"
