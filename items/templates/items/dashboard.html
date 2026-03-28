@@ -1,9 +1,9 @@
 {% extends 'base.html' %}
 {% block title %}Dashboard - CamBro{% endblock %}
 {% block content %}
-{% if user.notifications.filter.is_read=False.exists %}
+{% if user.notifications.all %} 
     <div class="max-w-4xl mx-auto px-4 pt-6">
-        {% for note in user.notifications.filter.is_read=False|dictsortreversed:"created_at"|slice:":3" %}
+        {% for note in user.notifications.all|dictsortreversed:"created_at"|slice:":3" %}
         <div class="bg-blue-50 border-l-4 border-main-blue p-4 rounded-r-xl flex justify-between items-center shadow-sm mb-3">
             <div class="flex items-center gap-3">
                 <span class="text-xl">🔔</span>

@@ -1,11 +1,94 @@
-<div class="flex justify-start mb-4">
-    <div class="bg-gray-100 text-gray-800 p-3 rounded-2xl rounded-bl-none max-w-[70%] shadow-sm">
-        <p class="text-sm">Hello! Is this camera still available?</p>
+{% extends 'base.html' %}
+{% block title %}แชท - CamBro{% endblock %}
+
+{% block content %}
+<div class="max-w-2xl mx-auto px-4 py-6 flex flex-col h-[85vh]">
+    <div class="flex items-center gap-4 mb-6 p-4 bg-white rounded-3xl shadow-sm border border-gray-50">
+        <a href="{% url 'inbox' %}" class="text-gray-400 hover:text-main-blue transition">←</a>
+        <div class="w-10 h-10 bg-blue-50 rounded-full flex items-center justify-center text-xl shadow-inner">👤</div>
+        <div class="flex-1">
+            <h2 class="font-bold text-gray-900 leading-tight">
+                {% if request.user == chat_room.owner %}
+                    {{ chat_room.borrower.username }}
+                {% else %}
+                    {{ chat_room.owner.username }}
+                {% endif %}
+            </h2>
+            <div class="flex items-center gap-1.5 mt-0.5">
+                <span class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
+                <p class="text-[10px] text-gray-400 font-medium uppercase tracking-wider">กำลังใช้งาน</p>
+            </div>
+        </div>
+        <div class="hidden sm:block text-right">
+            <p class="text-[10px] text-gray-400 uppercase tracking-tighter">กำลังคุยเรื่อง</p>
+            <p class="text-xs font-bold text-blue-400 truncate max-w-[120px]">✨ {{ chat_room.item.title }}</p>
+        </div>
     </div>
+
+    <div class="flex-1 overflow-y-auto space-y-4 mb-6 p-4 scrollbar-hide" id="chat-window">
+        {% for msg in messages_list %}
+            {% if msg.sender == request.user %}
+                <div class="flex justify-end items-end gap-2">
+                    <div class="max-w-[75%]">
+                        <div class="bg-[#85d7ff] text-gray-800 p-3.5 rounded-2xl rounded-tr-none shadow-sm">
+                            <p class="text-sm leading-relaxed">{{ msg.content }}</p>
+                        </div>
+                        <p class="text-[9px] text-gray-400 text-right mt-1.5 pr-1">{{ msg.timestamp|date:"H:i" }}</p>
+                    </div>
+                </div>
+            {% else %}
+                <div class="flex justify-start items-end gap-2">
+                    <div class="w-8 h-8 bg-gray-100 rounded-full flex-shrink-0 flex items-center justify-center text-xs shadow-sm border border-gray-50">👤</div>
+                    <div class="max-w-[75%]">
+                        <div class="bg-white text-gray-800 p-3.5 rounded-2xl rounded-tl-none border border-gray-100 shadow-sm">
+                            <p class="text-sm leading-relaxed">{{ msg.content }}</p>
+                        </div>
+                        <p class="text-[9px] text-gray-400 mt-1.5 pl-1">{{ msg.timestamp|date:"H:i" }}</p>
+                    </div>
+                </div>
+            {% endif %}
+        {% empty %}
+            <div class="text-center py-20">
+                <div class="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4 text-2xl">💬</div>
+                <p class="text-gray-400 text-sm">เริ่มพิมพ์เพื่อทักทายกันได้เลย!</p>
+            </div>
+        {% endfor %}
+    </div>
+
+    <form method="POST" class="relative group">
+        {% csrf_token %}
+        <div class="flex items-center gap-2 p-2 bg-white rounded-full shadow-xl border border-gray-100 focus-within:border-[#85d7ff] transition-all duration-300">
+            <input type="text" name="content" autocomplete="off" placeholder="พิมพ์ข้อความที่นี่..." 
+                   class="flex-1 px-6 py-3 bg-transparent border-none focus:ring-0 text-sm text-gray-700 placeholder:text-gray-300" required>
+            <button type="submit" class="bg-[#85d7ff] text-gray-800 p-3.5 rounded-full hover:bg-blue-400 transition-all shadow-lg shadow-blue-100 flex items-center justify-center active:scale-90">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 rotate-90" viewBox="0 0 20 20" fill="currentColor">
+                    <path d="M10.894 2.553a1 1 0 00-1.788 0l-7 14a1 1 0 001.169 1.409l5-1.429A1 1 0 009 15.571V11a1 1 0 112 0v4.571a1 1 0 00.725.962l5 1.428a1 1 0 001.17-1.408l-7-14z" />
+                </svg>
+            </button>
+        </div>
+    </form>
 </div>
 
-<div class="flex justify-end mb-4">
-    <div class="bg-[#85d7ff] text-gray-800 p-3 rounded-2xl rounded-br-none max-w-[70%] shadow-sm">
-        <p class="text-sm">Yes, it's available for next weekend!</p>
-    </div>
-</div>
+<script>
+    function scrollToBottom() {
+        const chatWindow = document.getElementById('chat-window');
+        chatWindow.scrollTop = chatWindow.scrollHeight;
+    }
+    window.onload = scrollToBottom;
+    document.querySelector('form').onsubmit = function() {
+        setTimeout(scrollToBottom, 100);
+    };
+</script>
+
+<style>
+   
+    .scrollbar-hide::-webkit-scrollbar {
+        display: none;
+    }
+   
+    .scrollbar-hide {
+        -ms-overflow-style: none;
+        scrollbar-width: none;
+    }
+</style>
+{% endblock %}
