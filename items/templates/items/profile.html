@@ -24,11 +24,6 @@
                 </div>
             </div>
         </div>
-        {% if user != profile_user %}
-            <a href="{% url 'item_list' %}?search={{ profile_user.username }}" class="px-5 py-2 border-2 border-main-blue text-main-blue rounded-full text-sm font-bold hover:bg-blue-50 transition">
-                ดูของที่ปล่อย
-            </a>
-        {% endif %}
     </div>
 
     <!-- Active Items -->
