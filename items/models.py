@@ -86,6 +86,9 @@ class BorrowRequest(models.Model):
     
     created_at = models.DateTimeField(auto_now_add=True)
     approved_at = models.DateTimeField(null=True, blank=True)
+
+    delivery_status = models.CharField(max_length=20, default='order_confirmed', verbose_name="สถานะการจัดส่ง")
+    rider = models.ForeignKey('Rider', on_delete=models.SET_NULL, null=True, blank=True)
     
     class Meta:
         ordering = ['-created_at']
@@ -127,3 +130,11 @@ class Notification(models.Model):
 
     def __str__(self):
         return f"Notification for {self.user.username}: {self.message}"
+    
+class Rider(models.Model):
+    name = models.CharField(max_length=100, verbose_name="ชื่อไรเดอร์")
+    vehicle_type = models.CharField(max_length=50, verbose_name="ยานพาหนะ", default="Honda PCX-150 9999")
+    phone_number = models.CharField(max_length=15, verbose_name="เบอร์โทรศัพท์")
+
+    def __str__(self):
+        return self.name

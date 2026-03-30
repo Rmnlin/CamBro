@@ -1,99 +1,88 @@
 {% extends 'base.html' %}
-{% block title %}{{ item.title }} - TU Exchange{% endblock %}
+{% block title %}{{ item.title }} - CamBro{% endblock %}
+
 {% block content %}
-<div class="max-w-4xl mx-auto px-4 py-8">
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-        <div>
+<div class="max-w-6xl mx-auto px-4 py-8 sm:py-12">
+    <a href="{% url 'item_list' %}" class="inline-flex items-center text-sm text-gray-500 hover:text-main-blue mb-6 transition">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+        </svg>
+        กลับไปดูของชิ้นอื่น
+    </a>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-10 items-start">
+        <div class="relative group">
             {% if item.photo %}
-                <img src="{{ item.photo.url }}" alt="{{ item.title }}" class="w-full rounded-lg shadow-lg">
+                <img src="{{ item.photo.url }}" alt="{{ item.title }}" class="w-full aspect-[4/3] object-cover rounded-[2rem] shadow-2xl border-4 border-white">
             {% else %}
-                <div class="w-full h-96 bg-gray-200 rounded-lg flex items-center justify-center">
-                    <span class="text-9xl">{{ item.category.icon }}</span>
+                <div class="w-full aspect-[4/3] bg-gray-50 rounded-[2rem] flex items-center justify-center text-9xl border-4 border-dashed border-gray-100">
+                    {{ item.category.icon }}
                 </div>
             {% endif %}
+            
+            <div class="absolute top-4 left-4 flex gap-2">
+                <span class="bg-white/90 backdrop-blur px-4 py-1.5 rounded-full text-xs font-bold text-gray-800 shadow-sm border border-gray-100">
+                    {{ item.category.name }}
+                </span>
+                <span class="bg-green-500/90 backdrop-blur px-4 py-1.5 rounded-full text-xs font-bold text-white shadow-sm">
+                    พร้อมให้ยืม ✨
+                </span>
+            </div>
         </div>
-        
-        <div>
-            <h1 class="text-3xl font-bold mb-4">{{ item.title }}</h1>
-            <div class="mb-4">
-                <span class="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm">{{ item.category.name }}</span>
-                <span class="bg-gray-100 text-gray-800 px-3 py-1 rounded-full text-sm ml-2">{{ item.get_campus_display }}</span>
+
+        <div class="flex flex-col h-full justify-center">
+            <div class="mb-2">
+                <span class="text-main-blue font-bold text-sm uppercase tracking-widest">{{ item.get_campus_display }} มธ.</span>
+                <h1 class="text-3xl sm:text-4xl font-extrabold text-gray-900 mt-1 mb-4 leading-tight">{{ item.title }}</h1>
             </div>
-            
-            <div class="mb-6">
-                {% if item.is_free %}
-                    <p class="text-4xl font-bold text-tu-red">ฟรี</p>
-                {% else %}
-                    <p class="text-4xl font-bold text-tu-red">มัดจำ {{ item.deposit_amount|floatformat:0 }}฿</p>
-                {% endif %}
-            </div>
-            
-            <div class="bg-gray-50 rounded-lg p-4 mb-6">
-                <h3 class="font-semibold mb-2">ข้อมูลการยืม</h3>
-                <p class="text-sm text-gray-600">• ยืมได้สูงสุด: {{ item.max_days }} วัน</p>
-                <p class="text-sm text-gray-600">• จุดนัดรับ: {{ item.pickup_location }}</p>
-                <p class="text-sm text-gray-600">• สภาพ: {{ item.get_condition_display }}</p>
-                
-                <div class="mt-3 pt-3 border-t border-gray-200">
-                    <p class="text-sm text-gray-800 font-semibold mb-1"> ประกันภัยที่เลือก:</p>
-                    <p class="text-sm text-gray-600">
-                        {% if item.insurance_plan == 'basic' %} 
-                            Basic Plan (คุ้มครองสูงสุด 5,000฿)
-                        {% elif item.insurance_plan == 'standard' %} 
-                            Standard Plan (คุ้มครองสูงสุด 10,000฿)
-                        {% elif item.insurance_plan == 'premium' %} 
-                            Premium Plan (คุ้มครอง 20,000฿ ไม่มีค่าเสียหายส่วนแรก)
-                        {% else %} 
-                            ไม่มีการประกันภัย (รับความเสี่ยงเองกรณีเกิดความเสียหาย)
-                        {% endif %}
+
+            <div class="bg-blue-50/50 rounded-3xl p-5 mb-6 border border-blue-100 flex items-center justify-between">
+                <div>
+                    <p class="text-[10px] text-blue-400 font-bold uppercase tracking-wider mb-1">ค่าประกันความเสียหาย</p>
+                    <p class="text-2xl font-black text-gray-900">
+                        {% if item.is_free %} ฟรี! <span class="text-sm font-normal text-gray-400 ml-1">(ไม่มีมัดจำ)</span>
+                        {% else %} {{ item.deposit_amount|floatformat:0 }}฿ <span class="text-sm font-normal text-gray-400 ml-1">/ ครั้ง</span> {% endif %}
                     </p>
                 </div>
-                </div>
-            
-            <div class="mb-6">
-                <h3 class="font-semibold mb-2">รายละเอียด</h3>
-                <p class="text-gray-700">{{ item.description }}</p>
-            </div>
-            
-            <div class="border-t pt-6 mb-6">
-                <h3 class="font-semibold mb-2">เจ้าของ</h3>
-                <div class="flex items-center gap-3">
-                    <div class="w-10 h-10 bg-tu-red text-white rounded-full flex items-center justify-center font-bold">
-                        {{ item.owner.username|first|upper }}
-                    </div>
-                    <div>
-                        <p class="font-medium">{{ item.owner.username }}</p>
-                    </div>
+                <div class="text-right">
+                    <p class="text-[10px] text-gray-400 font-bold uppercase tracking-wider mb-1">ยืมได้นานสูงสุด</p>
+                    <p class="text-lg font-bold text-gray-700">{{ item.max_days }} วัน</p>
                 </div>
             </div>
-            
-            {% if user.is_authenticated %}
-                {% if item.owner == user %}
-                    <button disabled class="w-full bg-gray-300 text-gray-500 py-3 rounded-lg font-semibold cursor-not-allowed">
-                        ของของคุณเอง
-                    </button>
-                {% elif not item.is_available %}
-                    <button disabled class="w-full bg-gray-300 text-gray-500 py-3 rounded-lg font-semibold cursor-not-allowed">
-                        ถูกยืมไปแล้ว
-                    </button>
+
+            <div class="mb-8 px-2">
+                <h4 class="text-sm font-bold text-gray-900 mb-2 flex items-center gap-2">
+                    <span class="w-5 h-5 bg-gray-100 rounded-full flex items-center justify-center text-[10px]">📝</span>
+                    รายละเอียดสิ่งของ
+                </h4>
+                <p class="text-gray-600 text-sm leading-relaxed">{{ item.description }}</p>
+            </div>
+
+            <div class="flex items-center gap-4 mb-8 p-4 rounded-3xl border border-gray-100 bg-white shadow-sm">
+                <div class="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center text-xl shadow-inner">👤</div>
+                <div class="flex-1">
+                    <p class="text-[10px] text-gray-400 uppercase font-bold tracking-tighter">เจ้าของของชิ้นนี้</p>
+                    <h5 class="text-sm font-bold text-gray-800">{{ item.owner.username }}</h5>
+                </div>
+                <div class="px-3 py-1 bg-gray-50 rounded-full text-[10px] text-gray-400 border border-gray-100">
+                    ยืนยันตัวตนแล้ว ✅
+                </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-4">
+                {% if user == item.owner %}
+                    <a href="{% url 'delete_item' item.item_id %}" class="col-span-2 py-4 bg-red-50 text-red-500 rounded-2xl font-bold hover:bg-red-100 transition text-center border border-red-100">
+                        ลบประกาศนี้
+                    </a>
                 {% else %}
-                    <div class="flex gap-3">
-                        <a href="{% url 'start_chat' item.item_id %}" 
-                           class="flex-1 text-center bg-white text-[#85d7ff] py-4 rounded-xl font-bold border-2 border-[#85d7ff] hover:bg-blue-50 transition shadow-sm">
-                           💬 แชท
-                        </a>
-                        
-                        <a href="{% url 'create_request' item.item_id %}"
-                           class="flex-[3] text-center bg-[#85d7ff] text-gray-800 py-4 rounded-xl font-bold text-lg hover:bg-[#68c9f5] shadow-md transition">
-                           ขอยืมสิ่งของนี้
-                        </a>
-                    </div>
+                    <a href="{% url 'start_chat' item.item_id %}" class="py-4 bg-white border-2 border-main-blue text-main-blue rounded-2xl font-bold hover:bg-blue-50 transition text-center shadow-sm active:scale-95">
+                        ทักแชทสอบถาม
+                    </a>
+                    <a href="{% url 'create_request' item.item_id %}" class="py-4 bg-main-blue text-white rounded-2xl font-bold hover:bg-blue-600 transition text-center shadow-lg shadow-blue-100 active:scale-95">
+                        ขอยืมชิ้นนี้
+                    </a>
                 {% endif %}
-            {% else %}
-                <a href="{% url 'login' %}?next={{ request.path }}" 
-                class="block w-full text-center bg-main-blue text-white py-4 rounded-2xl font-bold hover:opacity-90 transition shadow-md">เข้าสู่ระบบเพื่อขอยืม
-                </a>
-            {% endif %}
+            </div>
         </div>
     </div>
 </div>

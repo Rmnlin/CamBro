@@ -1,47 +1,92 @@
 {% extends 'base.html' %}
-{% block title %}กล่องข้อความ - CamBro{% endblock %}
+{% block title %}ข้อความ - CamBro{% endblock %}
 
 {% block content %}
-<div class="max-w-2xl mx-auto px-4 py-8">
-    <h1 class="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-2">
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-[#85d7ff]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
-        </svg>
-        ข้อความของคุณ
-    </h1>
+<div class="max-w-7xl mx-auto px-4 py-8">
+        <div class="flex items-center justify-between mb-10">
+        <div>
+            <h1 class="text-4xl font-black text-gray-900 tracking-tighter">ข้อความ</h1>
+            <p class="text-sm text-gray-400 mt-1 font-medium">ติดต่อและสอบถามเพื่อน มธ. ✨</p>
+        </div>
+        <div class="w-14 h-14 bg-blue-50 rounded-[2rem] flex items-center justify-center text-3xl shadow-sm border border-blue-100/50">
+            📬
+        </div>
+    </div>
 
-    <div class="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
+    <div class="relative mb-8 group">
+        <span class="absolute inset-y-0 left-5 flex items-center text-gray-500 group-focus-within:text-main-blue transition-colors">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
+        </span>
+        <input type="text" placeholder="ค้นหาเพื่อน หรือชื่อของ..." 
+               class="w-full pl-12 pr-6 py-4 bg-white border-2 border-gray-200 rounded-[1.5rem] text-sm text-gray-700 focus:border-main-blue focus:ring-4 focus:ring-blue-100 transition-all outline-none placeholder:text-gray-400 shadow-sm font-medium">
+    </div>
+
+    <div class="space-y-4">
         {% for room in chat_rooms %}
-            <a href="{% url 'chat_room' room.id %}" class="block p-4 hover:bg-gray-50 transition border-b border-gray-50 last:border-0">
-                <div class="flex items-center gap-4">
-                    <div class="w-12 h-12 bg-blue-50 rounded-full flex items-center justify-center text-2xl">
-                        {{ room.item.category.icon }}
+            <a href="{% url 'chat_room' room.id %}" 
+               class="flex items-center gap-5 p-5 bg-gradient-to-r from-blue-50/40 to-white rounded-[2.2rem] border border-blue-100/40 shadow-sm hover:shadow-xl hover:shadow-blue-100/20 hover:border-blue-200 transition-all group active:scale-[0.97] relative overflow-hidden">
+                
+                <div class="relative flex-shrink-0">
+                    <div class="w-16 h-16 bg-gradient-to-br from-[#85d7ff] to-blue-50 rounded-full flex items-center justify-center text-3xl shadow-inner border-4 border-white">
+                        👤
                     </div>
-                    
-                    <div class="flex-1">
-                        <div class="flex justify-between items-start">
-                            <h3 class="font-bold text-gray-900">
-                                {% if request.user == room.owner %}
-                                    {{ room.borrower.username }}
-                                {% else %}
-                                    {{ room.owner.username }}
-                                {% endif %}
-                            </h3>
-                            <span class="text-[10px] text-gray-400 uppercase tracking-wider">{{ room.created_at|date:"d M" }}</span>
-                        </div>
-                        <p class="text-sm text-gray-500 truncate">เรื่อง: {{ room.item.title }}</p>
-                    </div>
-                    
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-300" viewBox="0 0 20 20" fill="currentColor">
-                        <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" />
-                    </svg>
+                    <div class="absolute bottom-1 right-1 w-4.5 h-4.5 bg-green-500 border-4 border-white rounded-full shadow-sm animate-pulse"></div>
                 </div>
+
+                <div class="flex-1 min-w-0">
+                    <div class="flex justify-between items-baseline mb-1.5">
+                        <h3 class="font-bold text-gray-800 text-lg group-hover:text-main-blue transition-colors truncate">
+                            {% if request.user == room.owner %}
+                                {{ room.borrower.username }}
+                            {% else %}
+                                {{ room.owner.username }}
+                            {% endif %}
+                        </h3>
+                        <span class="text-[10px] font-bold text-blue-400 bg-blue-50 px-2 py-1 rounded-lg uppercase tracking-wider shadow-sm border border-blue-100/30">
+                            {{ room.messages.last.timestamp|date:"H:i"|default:"ใหม่" }}
+                        </span>
+                    </div>
+                    
+                    <div class="flex items-center justify-between gap-3">
+                        <p class="text-sm text-gray-500 truncate font-medium">
+                            {% if room.messages.last %}
+                                <span class="text-gray-300 font-normal">ล่าสุด:</span> {{ room.messages.last.content }}
+                            {% else %}
+                                <span class="text-main-blue italic text-xs animate-bounce inline-block">เริ่มทักทายเพื่อนเลย! 👋</span>
+                            {% endif %}
+                        </p>
+                        
+                        <div class="flex-shrink-0">
+                            <span class="px-3 py-1.5 bg-[#85d7ff] text-[#005a85] text-[10px] font-black rounded-xl shadow-sm border border-white/50 whitespace-nowrap group-hover:scale-105 transition-transform">
+                                📦 {{ room.item.title }}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="absolute left-0 top-0 bottom-0 w-1.5 bg-[#85d7ff] opacity-0 group-hover:opacity-100 transition-opacity"></div>
             </a>
         {% empty %}
-            <div class="p-10 text-center">
-                <p class="text-gray-400">ยังไม่มีการสนทนาในตอนนี้</p>
+            <div class="text-center py-24 bg-gray-50/50 rounded-[3rem] border-2 border-dashed border-gray-100">
+                <div class="text-7xl mb-6 opacity-40">💬</div>
+                <h3 class="text-xl font-bold text-gray-800">กล่องข้อความว่างเปล่า</h3>
+                <p class="text-sm text-gray-400 mt-2">ยังไม่มีใครทักมา หรือยังไม่ได้ทักใครไป<br>ลองไปหาของที่ถูกใจดูนะ!</p>
+                <a href="{% url 'item_list' %}" class="inline-block mt-8 px-10 py-3.5 bg-main-blue text-white text-sm font-bold rounded-full shadow-lg shadow-blue-200 hover:scale-105 transition-transform active:scale-95">ไปเริ่มยืมของกัน! 🚀</a>
             </div>
         {% endfor %}
     </div>
 </div>
+
+<style>
+
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    
+    ::-webkit-scrollbar { width: 8px; }
+    ::-webkit-scrollbar-track { background: #f8fafc; }
+    ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; border: 2px solid #f8fafc; }
+    ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+</style>
 {% endblock %}

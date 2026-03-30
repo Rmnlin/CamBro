@@ -19,4 +19,7 @@ urlpatterns = [
     path('request/<uuid:request_id>/cancel/', views.cancel_request, name='cancel_request'),
     path('requests/<uuid:request_id>/return/', views.return_item, name='return_item'),
     path('requests/<uuid:request_id>/notify-return/', views.notify_return, name='notify_return'),
+    path('notifications/read/<int:notification_id>/', views.mark_notification_read, name='mark_notification_read'),    
+    path('delivery/<uuid:request_id>/', views.delivery_details, name='delivery_details'),
+    path('return-success/<uuid:request_id>/', views.return_completed, name='return_completed'),
 ]

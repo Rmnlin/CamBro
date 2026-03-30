@@ -3,19 +3,59 @@
 {% block content %}
 <div class="max-w-7xl mx-auto px-4 py-8">
     <div class="mb-8">
-        <h1 class="text-3xl font-bold text-gray-900 mb-2">สิ่งของที่พร้อมให้ยืม</h1>
-        <p class="text-gray-600">แชร์และยืมของกับเพื่อนนักศึกษา มธ.</p>
-    </div>
+        <h1 class="text-4xl sm:text-5xl font-extrabold text-gray-900 tracking-tight mb-4">
+        ยืมของเพื่อน มธ. <span class="text-main-blue"> ง่าย ๆ แค่ปลายนิ้ว</span>
+        </h1>
+<p class="text-xl text-gray-600 max-w-2xl flex items-center gap-2">
     
-    <div class="mb-6 flex gap-4">
-        <input type="text" placeholder="ค้นหาสิ่งของ..." class="flex-1 px-4 py-2 border rounded-lg" id="search-input">
-        <select class="px-4 py-2 border rounded-lg" id="campus-filter">
-            <option value="">ทุกวิทยาเขต</option>
-            <option value="rangsit">รังสิต</option>
-            <option value="tha_prachan">ท่าพระจันทร์</option>
-            <option value="lampang">ลำปาง</option>
-        </select>
+    ไม่ต้องซื้อ แถมได้ลองของใหม่ ๆ กับ CamBro แพลตฟอร์มแชร์ของสำหรับชาว มธ.
+</p>
     </div>
+    <div class="bg-blue-50/50 rounded-3xl p-6 sm:p-10 mb-10 flex flex-col md:flex-row items-center gap-6 border border-blue-100 shadow-sm shadow-blue-50 mt-8">
+        <div class="w-20 h-20 sm:w-28 sm:h-28 flex-shrink-0 bg-white p-3 rounded-full flex items-center justify-center text-6xl shadow-inner border border-blue-100">
+            🎓
+        </div>
+        <div class="flex-1 text-center md:text-left">
+            <h3 class="text-2xl font-bold text-gray-900 mb-2">
+                ยินดีต้อนรับสู่ <span class="text-main-blue">CamBro!</span>
+            </h3>
+            <p class="text-gray-600 text-sm mb-5 leading-relaxed">
+                คอมมูนิตี้แชร์ของสำหรับเพื่อนนักศึกษา มธ. หากคุณมีของใช้ที่นาน ๆ ใช้ที (เช่น กล้อง, ขาตั้ง, บอร์ดเกม) 
+                อย่าปล่อยให้ฝุ่นจับ! นำมาลงประกาศให้เพื่อนยืม เพื่อสร้างรายได้เล็ก ๆ หรือช่วยเพื่อนประหยัดเงินกันเถอะ
+            </p>
+            <div class="flex flex-col sm:flex-row gap-3 justify-center md:justify-start">
+                <a href="{% url 'create_item' %}" class="inline-flex items-center justify-center gap-2.5 px-6 py-3 bg-main-blue text-white rounded-full font-bold hover:bg-blue-600 transition shadow-lg shadow-blue-100 active:scale-95 text-sm">
+                    <span>➕</span>
+                    เอาของมาลงประกาศยืมเลย!
+                </a>
+                <a href="#item-list" class="inline-flex items-center justify-center gap-2 px-6 py-3 bg-white text-gray-700 rounded-full font-medium hover:bg-gray-50 transition border border-gray-100 text-sm">
+                    🔍 ลองค้นหาของดู
+                </a>
+            </div>
+        </div>
+    </div>
+    <form method="GET" action="{% url 'item_list' %}" class="mb-6 flex gap-4" id="item-list">
+        <input type="text" 
+               name="search" 
+               value="{{ search_query|default:'' }}" 
+               placeholder="ค้นหาชื่อของ..." 
+               class="flex-1 px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-300 outline-none shadow-sm" 
+               id="search-input">
+        
+        <select name="campus" 
+                onchange="this.form.submit()" 
+                class="px-4 py-2 border border-gray-200 rounded-xl outline-none shadow-sm bg-white cursor-pointer" 
+                id="campus-filter">
+            <option value="">ทุกวิทยาเขต</option>
+            <option value="rangsit" {% if selected_campus == 'rangsit' %}selected{% endif %}>รังสิต</option>
+            <option value="tha_prachan" {% if selected_campus == 'tha_prachan' %}selected{% endif %}>ท่าพระจันทร์</option>
+            <option value="lampang" {% if selected_campus == 'lampang' %}selected{% endif %}>ลำปาง</option>
+        </select>
+
+        <button type="submit" class="bg-main-blue text-white px-8 py-2 rounded-xl font-bold hover:bg-blue-600 transition shadow-md active:scale-95">
+            ค้นหา
+        </button>
+    </form>
     
     <div class="flex gap-3 mb-6 overflow-x-auto pb-2">
         <a href="/" class="px-4 py-2 rounded-full transition {% if not selected_category %}bg-main-blue text-white shadow-sm{% else %}bg-gray-100 text-gray-600 hover:bg-gray-200{% endif %} whitespace-nowrap">ทั้งหมด</a>
