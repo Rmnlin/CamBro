@@ -193,7 +193,7 @@ def return_completed(request, request_id):
 
 def profile_view(request, username):
     profile_user = get_object_or_404(User, username=username)
-    reviews = Review.objects.filter(reviewee=profile_user).select_related('reviewer').order_by('-created_at')
+    reviews = Review.objects.filter(reviewee=profile_user, borrow_request__isnull=True).select_related('reviewer').order_by('-created_at')
     avg_rating = reviews.aggregate(models.Avg('rating'))['rating__avg']
     active_items = Item.objects.filter(owner=profile_user, is_available=True, status='active')
     if request.method == 'POST' and request.user.is_authenticated and request.user != profile_user:
