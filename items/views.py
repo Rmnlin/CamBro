@@ -5,7 +5,7 @@ from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.models import User
 from django.contrib import messages
 from django.utils import timezone
-from .models import Item, Category, BorrowRequest, ChatRoom, Message, Notification, Rider
+from .models import Item, Category, BorrowRequest, ChatRoom, Message, Notification, Rider, Review
 
 # --- Utility ---
 def create_notification(user, message, link='/dashboard/'):
@@ -66,7 +66,9 @@ def item_list(request):
 
 def item_detail(request, item_id):
     item = get_object_or_404(Item.objects.select_related('owner', 'category'), item_id=item_id)
-    return render(request, 'items/detail.html', {'item': item})
+    reviews = Review.objects.filter(borrow_request__item=item).select_related('reviewer').order_by('-created_at')
+    avg_rating = reviews.aggregate(models.Avg('rating'))['rating__avg']
+    return render(request, 'items/detail.html', {'item': item, 'reviews': reviews, 'avg_rating': avg_rating})
 
 @login_required
 def create_item(request):
@@ -186,4 +188,36 @@ def delivery_details(request, request_id):
 @login_required
 def return_completed(request, request_id):
     req = get_object_or_404(BorrowRequest, request_id=request_id)
-    return render(request, 'items/return_completed.html', {'borrow_request': req})
+    already_reviewed = Review.objects.filter(borrow_request=req).exists()
+    return render(request, 'items/return_completed.html', {'borrow_request': req, 'already_reviewed': already_reviewed})
+
+def profile_view(request, username):
+    profile_user = get_object_or_404(User, username=username)
+    reviews = Review.objects.filter(reviewee=profile_user).select_related('reviewer').order_by('-created_at')
+    avg_rating = reviews.aggregate(models.Avg('rating'))['rating__avg']
+    active_items = Item.objects.filter(owner=profile_user, is_available=True, status='active')
+    if request.method == 'POST' and request.user.is_authenticated and request.user != profile_user:
+        rating = request.POST.get('rating')
+        comment = request.POST.get('comment', '').strip()
+        if rating and rating.isdigit() and 1 <= int(rating) <= 5:
+            Review.objects.create(reviewer=request.user, reviewee=profile_user, rating=int(rating), comment=comment)
+        return redirect('profile', username=username)
+
+    return render(request, 'items/profile.html', {
+        'profile_user': profile_user,
+        'reviews': reviews,
+        'avg_rating': avg_rating,
+        'active_items': active_items,
+    })
+
+@login_required
+def leave_review(request, request_id):
+    req = get_object_or_404(BorrowRequest, request_id=request_id, borrower=request.user)
+    if req.status != 'returned' or Review.objects.filter(borrow_request=req).exists():
+        return redirect('dashboard')
+    if request.method == 'POST':
+        rating = request.POST.get('rating')
+        comment = request.POST.get('comment', '').strip()
+        if rating and rating.isdigit() and 1 <= int(rating) <= 5:
+            Review.objects.create(borrow_request=req, reviewer=request.user, reviewee=req.lender, rating=int(rating), comment=comment)
+    return redirect('item_list')

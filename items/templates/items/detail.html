@@ -62,7 +62,7 @@
                 <div class="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center text-xl shadow-inner">👤</div>
                 <div class="flex-1">
                     <p class="text-[10px] text-gray-400 uppercase font-bold tracking-tighter">เจ้าของของชิ้นนี้</p>
-                    <h5 class="text-sm font-bold text-gray-800">{{ item.owner.username }}</h5>
+                    <a href="{% url 'profile' item.owner.username %}" class="text-sm font-bold text-gray-800 hover:text-main-blue transition">{{ item.owner.username }}</a>
                 </div>
                 <div class="px-3 py-1 bg-gray-50 rounded-full text-[10px] text-gray-400 border border-gray-100">
                     ยืนยันตัวตนแล้ว ✅
@@ -84,6 +84,42 @@
                 {% endif %}
             </div>
         </div>
+    </div>
+    <!-- Reviews Section -->
+    <div class="mt-12">
+        <div class="flex items-center justify-between mb-6">
+            <h2 class="text-xl font-black text-gray-900">รีวิวจากผู้ยืม</h2>
+            {% if avg_rating %}
+            <span class="text-sm font-bold text-gray-500">{{ avg_rating|floatformat:1 }}/5.0 ({{ reviews.count }} รีวิว)</span>
+            {% endif %}
+        </div>
+
+        {% if reviews %}
+        <div class="space-y-4">
+            {% for review in reviews %}
+            <div class="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm">
+                <div class="flex justify-between items-start mb-2">
+                    <div>
+                        <p class="font-bold text-gray-900 text-sm">{{ review.reviewer.username }}</p>
+                        <div class="flex gap-0.5 mt-1">
+                            {% for i in "12345" %}
+                                <span class="text-lg {% if forloop.counter <= review.rating %}text-yellow-400{% else %}text-gray-200{% endif %}">★</span>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    <p class="text-xs text-gray-400">{{ review.created_at|timesince }} ที่แล้ว</p>
+                </div>
+                {% if review.comment %}
+                <p class="text-sm text-gray-600 mt-2">{{ review.comment }}</p>
+                {% endif %}
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="text-center py-10 bg-gray-50 rounded-2xl border-2 border-dashed border-gray-200">
+            <p class="text-gray-400 text-sm">ยังไม่มีรีวิวสำหรับของชิ้นนี้</p>
+        </div>
+        {% endif %}
     </div>
 </div>
 {% endblock %}

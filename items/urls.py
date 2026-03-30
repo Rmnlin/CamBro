@@ -22,4 +22,6 @@ urlpatterns = [
     path('notifications/read/<int:notification_id>/', views.mark_notification_read, name='mark_notification_read'),    
     path('delivery/<uuid:request_id>/', views.delivery_details, name='delivery_details'),
     path('return-success/<uuid:request_id>/', views.return_completed, name='return_completed'),
+    path('requests/<uuid:request_id>/review/', views.leave_review, name='leave_review'),
+    path('profile/<str:username>/', views.profile_view, name='profile'),
 ]

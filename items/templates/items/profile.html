@@ -1,0 +1,112 @@
+{% extends 'base.html' %}
+{% block title %}{{ profile_user.username }} - CamBro{% endblock %}
+
+{% block content %}
+<div class="max-w-3xl mx-auto px-4 py-10">
+
+    <!-- Profile Card -->
+    <div class="bg-white rounded-3xl p-6 shadow-sm border border-gray-100 mb-8 flex items-center justify-between gap-4">
+        <div class="flex items-center gap-4">
+            <div class="w-16 h-16 bg-main-blue/10 text-main-blue rounded-2xl flex items-center justify-center text-3xl font-black">
+                {{ profile_user.username|slice:":1"|upper }}
+            </div>
+            <div>
+                <h1 class="text-xl font-black text-gray-900">{{ profile_user.username }}</h1>
+                <p class="text-xs text-gray-400">สมาชิกตั้งแต่ {{ profile_user.date_joined|date:"M Y" }}</p>
+                <div class="flex items-center gap-1 mt-1">
+                    {% if avg_rating %}
+                        <span class="text-yellow-400 text-sm">★</span>
+                        <span class="text-sm font-bold text-gray-700">{{ avg_rating|floatformat:1 }}</span>
+                        <span class="text-xs text-gray-400">({{ reviews.count }} รีวิว)</span>
+                    {% else %}
+                        <span class="text-xs text-gray-400">ยังไม่มีรีวิว</span>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% if user != profile_user %}
+            <a href="{% url 'item_list' %}?search={{ profile_user.username }}" class="px-5 py-2 border-2 border-main-blue text-main-blue rounded-full text-sm font-bold hover:bg-blue-50 transition">
+                ดูของที่ปล่อย
+            </a>
+        {% endif %}
+    </div>
+
+    <!-- Active Items -->
+    {% if active_items %}
+    <section class="mb-8">
+        <h2 class="text-lg font-black text-gray-900 mb-4">ของที่กำลังปล่อยให้ยืม</h2>
+        <div class="grid grid-cols-2 sm:grid-cols-3 gap-4">
+            {% for item in active_items %}
+            <a href="{% url 'item_detail' item.item_id %}" class="bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition overflow-hidden">
+                {% if item.photo %}
+                    <img src="{{ item.photo.url }}" class="w-full aspect-square object-cover">
+                {% else %}
+                    <div class="w-full aspect-square bg-gray-50 flex items-center justify-center text-4xl">{{ item.category.icon }}</div>
+                {% endif %}
+                <div class="p-3">
+                    <p class="text-sm font-bold text-gray-800 truncate">{{ item.title }}</p>
+                    <p class="text-xs text-gray-400">{{ item.get_campus_display }}</p>
+                </div>
+            </a>
+            {% endfor %}
+        </div>
+    </section>
+    {% endif %}
+
+    <!-- Write Review Form -->
+    {% if user.is_authenticated and user != profile_user %}
+    <section class="mb-8">
+        <div class="bg-white rounded-3xl p-6 border border-gray-100 shadow-sm">
+            <h2 class="text-lg font-black text-gray-900 mb-5">เขียนรีวิว</h2>
+
+            <form method="POST">
+                {% csrf_token %}
+
+                <input type="hidden" name="rating" value="5">
+                <!-- Comment -->
+                <div class="bg-gray-50 rounded-2xl p-4 mb-5 border border-gray-100">
+                    <textarea name="comment" placeholder="เขียนรีวิวสั้นๆ..." rows="3"
+                              class="w-full bg-transparent border-none focus:ring-0 text-sm text-gray-600 placeholder:text-gray-300 resize-none"></textarea>
+                </div>
+
+                <button type="submit" class="w-full py-3 bg-main-blue text-white rounded-2xl font-bold shadow-lg shadow-blue-100 hover:scale-[1.02] transition active:scale-95">
+                    โพสต์รีวิว
+                </button>
+            </form>
+        </div>
+    </section>
+    {% endif %}
+
+    <!-- Reviews List -->
+    <section>
+        <div class="flex items-center justify-between mb-4">
+            <h2 class="text-lg font-black text-gray-900">รีวิวทั้งหมด</h2>
+            <span class="text-sm font-bold text-gray-500">({{ reviews.count }} รีวิว)</span>
+        </div>
+
+        {% if reviews %}
+        <div class="space-y-4">
+            {% for review in reviews %}
+            <div class="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm">
+                <div class="flex justify-between items-start mb-2">
+                    <div>
+                        <p class="font-bold text-gray-900 text-sm">{{ review.reviewer.username }}</p>
+                    </div>
+                    <p class="text-xs text-gray-400">{{ review.created_at|timesince }} ที่แล้ว</p>
+                </div>
+                {% if review.comment %}
+                <p class="text-sm text-gray-600 mt-2">{{ review.comment }}</p>
+                {% endif %}
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="text-center py-12 bg-gray-50 rounded-2xl border-2 border-dashed border-gray-200">
+            <p class="text-gray-400 text-sm">ยังไม่มีรีวิว</p>
+        </div>
+        {% endif %}
+    </section>
+
+</div>
+
+{% endblock %}

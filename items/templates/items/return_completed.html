@@ -23,32 +23,84 @@
 
     <div class="bg-white rounded-[2.5rem] p-8 shadow-xl shadow-blue-50 border border-gray-50 mb-10 text-left">
         <h3 class="font-bold text-gray-900 mb-6 text-lg">Rate Your Experience</h3>
-        
+
         <div class="flex items-center gap-5 mb-8">
             <div class="w-16 h-16 bg-gray-50 rounded-2xl flex items-center justify-center text-3xl border border-gray-100">
-                {% if borrow_request.item.category.icon %} {{ borrow_request.item.category.icon }} {% else %} 📷 {% endif %}
+                {% if borrow_request.item.category.icon %}{{ borrow_request.item.category.icon }}{% else %}📷{% endif %}
             </div>
             <div class="flex-1">
-                <p class="font-bold text-gray-900 leading-none mb-2">{{ borrow_request.item.title }}</p>
-                <div class="flex text-yellow-400 gap-1.5 text-2xl">
-                    <span>★</span><span>★</span><span>★</span><span>★</span><span class="text-gray-200">★</span>
-                </div>
+                <p class="font-bold text-gray-900 leading-none mb-1">{{ borrow_request.item.title }}</p>
+                <p class="text-xs text-gray-400">เจ้าของ: {{ borrow_request.lender.username }}</p>
             </div>
         </div>
 
-        <div class="bg-gray-50 rounded-2xl p-5 mb-8 border border-gray-100">
-            <textarea placeholder="เขียนรีวิวสั้นๆ เพื่อช่วยเพื่อนในคอมมูนิตี้..." 
-                      class="w-full bg-transparent border-none focus:ring-0 text-sm text-gray-600 placeholder:text-gray-300 resize-none" 
-                      rows="3"></textarea>
+        {% if already_reviewed %}
+        <div class="bg-green-50 rounded-2xl p-5 text-center mb-6">
+            <p class="text-green-600 font-bold">คุณรีวิวแล้ว ขอบคุณ!</p>
         </div>
-
         <a href="{% url 'item_list' %}" class="w-full block py-4 bg-main-blue text-white rounded-2xl font-bold shadow-lg shadow-blue-200 hover:scale-105 transition-all active:scale-95 text-center">
-            Submit & Explore More 
+            Explore More
         </a>
+        {% elif user == borrow_request.borrower %}
+        <form method="POST" action="{% url 'leave_review' borrow_request.request_id %}">
+            {% csrf_token %}
+
+            <div class="flex justify-center gap-2 mb-8" id="star-container">
+                {% for i in "12345" %}
+                <label class="cursor-pointer">
+                    <input type="radio" name="rating" value="{{ i }}" class="hidden" required>
+                    <span class="text-4xl text-gray-200 hover:text-yellow-400 transition star-btn" data-value="{{ i }}">★</span>
+                </label>
+                {% endfor %}
+            </div>
+
+            <div class="bg-gray-50 rounded-2xl p-5 mb-8 border border-gray-100">
+                <textarea name="comment" placeholder="เขียนรีวิวสั้นๆ เพื่อช่วยเพื่อนในคอมมูนิตี้..."
+                          class="w-full bg-transparent border-none focus:ring-0 text-sm text-gray-600 placeholder:text-gray-300 resize-none"
+                          rows="3"></textarea>
+            </div>
+
+            <button type="submit" class="w-full py-4 bg-main-blue text-white rounded-2xl font-bold shadow-lg shadow-blue-200 hover:scale-105 transition-all active:scale-95">
+                Submit & Explore More
+            </button>
+        </form>
+        {% else %}
+        <a href="{% url 'item_list' %}" class="w-full block py-4 bg-main-blue text-white rounded-2xl font-bold shadow-lg shadow-blue-200 hover:scale-105 transition-all active:scale-95 text-center">
+            Explore More
+        </a>
+        {% endif %}
     </div>
-    
+
     <button class="text-gray-300 hover:text-red-400 text-[10px] font-bold uppercase tracking-widest transition">
         Report a Problem
     </button>
 </div>
+
+<script>
+    const stars = document.querySelectorAll('.star-btn');
+    stars.forEach(star => {
+        star.addEventListener('click', () => {
+            const val = parseInt(star.dataset.value);
+            stars.forEach((s, i) => {
+                s.classList.toggle('text-yellow-400', i < val);
+                s.classList.toggle('text-gray-200', i >= val);
+            });
+        });
+        star.addEventListener('mouseover', () => {
+            const val = parseInt(star.dataset.value);
+            stars.forEach((s, i) => {
+                s.classList.toggle('text-yellow-400', i < val);
+                s.classList.toggle('text-gray-200', i >= val);
+            });
+        });
+    });
+    document.getElementById('star-container')?.addEventListener('mouseleave', () => {
+        const checked = document.querySelector('input[name="rating"]:checked');
+        const val = checked ? parseInt(checked.value) : 0;
+        stars.forEach((s, i) => {
+            s.classList.toggle('text-yellow-400', i < val);
+            s.classList.toggle('text-gray-200', i >= val);
+        });
+    });
+</script>
 {% endblock %}

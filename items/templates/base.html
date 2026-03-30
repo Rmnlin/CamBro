@@ -36,7 +36,7 @@
         <a href="{% url 'dashboard' %}" class="text-gray-700 hover:text-main-blue">Dashboard</a>
         
         <div class="flex items-center gap-3 ml-2 border-l pl-4">
-            <span class="text-gray-700 text-sm">สวัสดี, <strong>{{ user.username }}</strong></span>
+            <a href="{% url 'profile' user.username %}" class="text-gray-700 text-sm hover:text-main-blue transition">สวัสดี, <strong>{{ user.username }}</strong></a>
             
             <form action="{% url 'logout' %}" method="post" class="inline">
                 {% csrf_token %}

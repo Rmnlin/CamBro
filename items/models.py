@@ -70,6 +70,7 @@ class BorrowRequest(models.Model):
         ('approved', 'อนุมัติ'),
         ('declined', 'ปฏิเสธ'),
         ('active', 'กำลังยืม'),
+        ('returning', 'กำลังคืน'),
         ('returned', 'คืนแล้ว'),
     ]
     
@@ -138,3 +139,16 @@ class Rider(models.Model):
 
     def __str__(self):
         return self.name
+
+class Review(models.Model):
+    RATING_CHOICES = [(i, i) for i in range(1, 6)]
+
+    borrow_request = models.OneToOneField(BorrowRequest, on_delete=models.SET_NULL, null=True, blank=True, related_name='review')
+    reviewer = models.ForeignKey(User, on_delete=models.CASCADE, related_name='reviews_given')
+    reviewee = models.ForeignKey(User, on_delete=models.CASCADE, related_name='reviews_received')
+    rating = models.IntegerField(choices=RATING_CHOICES)
+    comment = models.TextField(blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.reviewer.username} รีวิว {self.reviewee.username} ({self.rating}⭐)"
