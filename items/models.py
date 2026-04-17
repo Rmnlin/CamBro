@@ -140,6 +140,17 @@ class Rider(models.Model):
     def __str__(self):
         return self.name
 
+class ItemPhoto(models.Model):
+    item = models.ForeignKey(Item, on_delete=models.CASCADE, related_name='photos')
+    image = models.ImageField(upload_to='items/')
+    order = models.PositiveIntegerField(default=0)
+
+    class Meta:
+        ordering = ['order']
+
+    def __str__(self):
+        return f"รูปของ {self.item.title}"
+
 class Review(models.Model):
     RATING_CHOICES = [(i, i) for i in range(1, 6)]
 

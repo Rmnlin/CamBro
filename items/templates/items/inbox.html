@@ -2,91 +2,131 @@
 {% block title %}ข้อความ - CamBro{% endblock %}
 
 {% block content %}
-<div class="max-w-7xl mx-auto px-4 py-8">
-        <div class="flex items-center justify-between mb-10">
-        <div>
-            <h1 class="text-4xl font-black text-gray-900 tracking-tighter">ข้อความ</h1>
-            <p class="text-sm text-gray-400 mt-1 font-medium">ติดต่อและสอบถามเพื่อน มธ. ✨</p>
-        </div>
-        <div class="w-14 h-14 bg-blue-50 rounded-[2rem] flex items-center justify-center text-3xl shadow-sm border border-blue-100/50">
-            📬
-        </div>
-    </div>
+<div class="max-w-7xl mx-auto px-4 py-6">
+    <div class="flex gap-4 h-[calc(100vh-120px)]">
 
-    <div class="relative mb-8 group">
-        <span class="absolute inset-y-0 left-5 flex items-center text-gray-500 group-focus-within:text-main-blue transition-colors">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-            </svg>
-        </span>
-        <input type="text" placeholder="ค้นหาเพื่อน หรือชื่อของ..." 
-               class="w-full pl-12 pr-6 py-4 bg-white border-2 border-gray-200 rounded-[1.5rem] text-sm text-gray-700 focus:border-main-blue focus:ring-4 focus:ring-blue-100 transition-all outline-none placeholder:text-gray-400 shadow-sm font-medium">
-    </div>
-
-    <div class="space-y-4">
-        {% for room in chat_rooms %}
-            <a href="{% url 'chat_room' room.id %}" 
-               class="flex items-center gap-5 p-5 bg-gradient-to-r from-blue-50/40 to-white rounded-[2.2rem] border border-blue-100/40 shadow-sm hover:shadow-xl hover:shadow-blue-100/20 hover:border-blue-200 transition-all group active:scale-[0.97] relative overflow-hidden">
-                
-                <div class="relative flex-shrink-0">
-                    <div class="w-16 h-16 bg-gradient-to-br from-[#85d7ff] to-blue-50 rounded-full flex items-center justify-center text-3xl shadow-inner border-4 border-white">
-                        👤
-                    </div>
-                    <div class="absolute bottom-1 right-1 w-4.5 h-4.5 bg-green-500 border-4 border-white rounded-full shadow-sm animate-pulse"></div>
+        <!-- Left Panel: Chat List -->
+        <div class="w-80 flex-shrink-0 bg-white rounded-2xl border border-gray-100 shadow-sm flex flex-col overflow-hidden">
+            <div class="px-4 pt-4 pb-3 border-b border-gray-50">
+                <h1 class="text-lg font-black text-gray-900 mb-3">ข้อความ</h1>
+                <div class="relative">
+                    <span class="absolute inset-y-0 left-3 flex items-center text-gray-400">
+                        <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                        </svg>
+                    </span>
+                    <input type="text" placeholder="ค้นหา..."
+                           class="w-full pl-9 pr-3 py-2 bg-gray-50 border border-gray-100 rounded-xl text-sm outline-none placeholder:text-gray-300 focus:border-main-blue focus:ring-1 focus:ring-blue-100">
                 </div>
-
-                <div class="flex-1 min-w-0">
-                    <div class="flex justify-between items-baseline mb-1.5">
-                        <h3 class="font-bold text-gray-800 text-lg group-hover:text-main-blue transition-colors truncate">
-                            {% if request.user == room.owner %}
-                                {{ room.borrower.username }}
-                            {% else %}
-                                {{ room.owner.username }}
-                            {% endif %}
-                        </h3>
-                        <span class="text-[10px] font-bold text-blue-400 bg-blue-50 px-2 py-1 rounded-lg uppercase tracking-wider shadow-sm border border-blue-100/30">
-                            {{ room.messages.last.timestamp|date:"H:i"|default:"ใหม่" }}
-                        </span>
-                    </div>
-                    
-                    <div class="flex items-center justify-between gap-3">
-                        <p class="text-sm text-gray-500 truncate font-medium">
-                            {% if room.messages.last %}
-                                <span class="text-gray-300 font-normal">ล่าสุด:</span> {{ room.messages.last.content }}
-                            {% else %}
-                                <span class="text-main-blue italic text-xs animate-bounce inline-block">เริ่มทักทายเพื่อนเลย! 👋</span>
-                            {% endif %}
-                        </p>
-                        
-                        <div class="flex-shrink-0">
-                            <span class="px-3 py-1.5 bg-[#85d7ff] text-[#005a85] text-[10px] font-black rounded-xl shadow-sm border border-white/50 whitespace-nowrap group-hover:scale-105 transition-transform">
-                                📦 {{ room.item.title }}
-                            </span>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="absolute left-0 top-0 bottom-0 w-1.5 bg-[#85d7ff] opacity-0 group-hover:opacity-100 transition-opacity"></div>
-            </a>
-        {% empty %}
-            <div class="text-center py-24 bg-gray-50/50 rounded-[3rem] border-2 border-dashed border-gray-100">
-                <div class="text-7xl mb-6 opacity-40">💬</div>
-                <h3 class="text-xl font-bold text-gray-800">กล่องข้อความว่างเปล่า</h3>
-                <p class="text-sm text-gray-400 mt-2">ยังไม่มีใครทักมา หรือยังไม่ได้ทักใครไป<br>ลองไปหาของที่ถูกใจดูนะ!</p>
-                <a href="{% url 'item_list' %}" class="inline-block mt-8 px-10 py-3.5 bg-main-blue text-white text-sm font-bold rounded-full shadow-lg shadow-blue-200 hover:scale-105 transition-transform active:scale-95">ไปเริ่มยืมของกัน! 🚀</a>
             </div>
-        {% endfor %}
+
+            <div class="flex-1 overflow-y-auto divide-y divide-gray-50">
+                {% for room in chat_rooms %}
+                <a href="/inbox/?room={{ room.id }}"
+                   class="flex items-center gap-3 px-4 py-3 hover:bg-blue-50/40 transition group {% if active_room.id == room.id %}bg-blue-50/60 border-l-4 border-main-blue{% endif %}">
+                    <div class="relative flex-shrink-0">
+                        <div class="w-11 h-11 bg-gradient-to-br from-main-blue to-blue-200 rounded-full flex items-center justify-center text-white font-bold text-base">
+                            {% if request.user == room.owner %}{{ room.borrower.username|first|upper }}{% else %}{{ room.owner.username|first|upper }}{% endif %}
+                        </div>
+                        <div class="absolute bottom-0 right-0 w-2.5 h-2.5 bg-green-400 border-2 border-white rounded-full"></div>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <div class="flex justify-between items-center">
+                            <span class="font-bold text-gray-900 text-sm truncate">
+                                {% if request.user == room.owner %}{{ room.borrower.username }}{% else %}{{ room.owner.username }}{% endif %}
+                            </span>
+                            <span class="text-[10px] text-gray-400 ml-1 flex-shrink-0">{{ room.messages.last.timestamp|date:"H:i"|default:"" }}</span>
+                        </div>
+                        <p class="text-xs text-main-blue font-semibold truncate">📦 {{ room.item.title }}</p>
+                        <p class="text-xs text-gray-400 truncate">
+                            {% if room.messages.last %}{{ room.messages.last.content }}{% else %}เริ่มทักทายได้เลย!{% endif %}
+                        </p>
+                    </div>
+                </a>
+                {% empty %}
+                <div class="text-center py-12 px-4">
+                    <div class="text-4xl mb-3 opacity-30">💬</div>
+                    <p class="text-sm text-gray-400">ยังไม่มีการสนทนา</p>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Right Panel: Chat Room -->
+        <div class="flex-1 bg-white rounded-2xl border border-gray-100 shadow-sm flex flex-col overflow-hidden">
+            {% if active_room %}
+                <!-- Header -->
+                <div class="px-5 py-3 border-b border-gray-50 flex items-center gap-3">
+                    <div class="w-10 h-10 bg-gradient-to-br from-main-blue to-blue-200 rounded-full flex items-center justify-center text-white font-bold">
+                        {% if request.user == active_room.owner %}{{ active_room.borrower.username|first|upper }}{% else %}{{ active_room.owner.username|first|upper }}{% endif %}
+                    </div>
+                    <div class="flex-1">
+                        <h2 class="font-bold text-gray-900 text-sm">
+                            {% if request.user == active_room.owner %}{{ active_room.borrower.username }}{% else %}{{ active_room.owner.username }}{% endif %}
+                        </h2>
+                        <p class="text-xs text-gray-400">เรื่อง: {{ active_room.item.title }}</p>
+                    </div>
+                    <a href="{% url 'item_detail' active_room.item.item_id %}"
+                       class="flex items-center gap-2 px-3 py-1.5 bg-blue-50 text-main-blue text-xs font-bold rounded-xl hover:bg-blue-100 transition">
+                        📦 ดูของ
+                    </a>
+                </div>
+
+                <!-- Messages -->
+                <div class="flex-1 overflow-y-auto p-4 space-y-3 bg-gray-50" id="chat-messages">
+                    {% for msg in messages_list %}
+                        {% if msg.sender == request.user %}
+                        <div class="flex justify-end">
+                            <div class="max-w-[70%] bg-main-blue text-gray-800 px-4 py-2.5 rounded-2xl rounded-tr-none shadow-sm">
+                                <p class="text-sm">{{ msg.content }}</p>
+                                <span class="text-[10px] text-gray-500 mt-1 block text-right">{{ msg.timestamp|date:"H:i" }}</span>
+                            </div>
+                        </div>
+                        {% else %}
+                        <div class="flex justify-start">
+                            <div class="max-w-[70%] bg-white text-gray-800 px-4 py-2.5 rounded-2xl rounded-tl-none shadow-sm border border-gray-100">
+                                <p class="text-sm">{{ msg.content }}</p>
+                                <span class="text-[10px] text-gray-400 mt-1 block">{{ msg.timestamp|date:"H:i" }}</span>
+                            </div>
+                        </div>
+                        {% endif %}
+                    {% empty %}
+                    <div class="text-center py-10">
+                        <p class="text-gray-400 text-sm">เริ่มการสนทนาได้เลย!</p>
+                    </div>
+                    {% endfor %}
+                    <div id="scroll-bottom"></div>
+                </div>
+
+                <!-- Input -->
+                <div class="p-3 bg-white border-t border-gray-50">
+                    <form method="POST" action="/inbox/?room={{ active_room.id }}" class="flex gap-2 items-center">
+                        {% csrf_token %}
+                        <input type="text" name="content" placeholder="พิมพ์ข้อความ..." required
+                               class="flex-1 bg-gray-50 border border-gray-100 rounded-full px-4 py-2.5 text-sm focus:ring-2 focus:ring-main-blue outline-none">
+                        <button type="submit" class="bg-main-blue text-white p-2.5 rounded-full hover:bg-blue-400 transition shadow-sm">
+                            <svg class="h-5 w-5 rotate-90" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/>
+                            </svg>
+                        </button>
+                    </form>
+                </div>
+
+            {% else %}
+                <!-- Empty state -->
+                <div class="flex-1 flex flex-col items-center justify-center text-center px-8">
+                    <div class="text-6xl mb-4 opacity-20">💬</div>
+                    <h3 class="font-bold text-gray-600 mb-1">เลือกการสนทนา</h3>
+                    <p class="text-sm text-gray-400">คลิกชื่อแชทด้านซ้ายเพื่อเริ่มอ่านข้อความ</p>
+                </div>
+            {% endif %}
+        </div>
+
     </div>
 </div>
 
-<style>
-
-    .no-scrollbar::-webkit-scrollbar { display: none; }
-    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-    
-    ::-webkit-scrollbar { width: 8px; }
-    ::-webkit-scrollbar-track { background: #f8fafc; }
-    ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; border: 2px solid #f8fafc; }
-    ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
-</style>
+<script>
+    const el = document.getElementById('scroll-bottom');
+    if (el) el.scrollIntoView();
+</script>
 {% endblock %}

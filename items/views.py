@@ -5,7 +5,7 @@ from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.models import User
 from django.contrib import messages
 from django.utils import timezone
-from .models import Item, Category, BorrowRequest, ChatRoom, Message, Notification, Rider, Review
+from .models import Item, Category, BorrowRequest, ChatRoom, Message, Notification, Rider, Review, ItemPhoto
 
 # --- Utility ---
 def create_notification(user, message, link='/dashboard/'):
@@ -81,7 +81,8 @@ def item_detail(request, item_id):
     item = get_object_or_404(Item.objects.select_related('owner', 'category'), item_id=item_id)
     reviews = Review.objects.filter(borrow_request__item=item).select_related('reviewer').order_by('-created_at')
     avg_rating = reviews.aggregate(models.Avg('rating'))['rating__avg']
-    return render(request, 'items/detail.html', {'item': item, 'reviews': reviews, 'avg_rating': avg_rating})
+    photos = item.photos.all()
+    return render(request, 'items/detail.html', {'item': item, 'reviews': reviews, 'avg_rating': avg_rating, 'photos': photos})
 
 @login_required
 def create_item(request):
@@ -96,8 +97,14 @@ def create_item(request):
                 condition=request.POST.get('condition', 'good'), campus=request.POST.get('campus', 'rangsit'),
                 pickup_location=request.POST.get('pickup_location', ''), is_free=request.POST.get('is_free') == 'true',
                 deposit_amount=request.POST.get('deposit_amount', 0) or 0, max_days=request.POST.get('max_days', 7) or 7,
-                photo=request.FILES.get('photo'), insurance_plan=request.POST.get('insurance_plan', 'none')
+                insurance_plan=request.POST.get('insurance_plan', 'none')
             )
+            photos = request.FILES.getlist('photos')
+            for i, photo in enumerate(photos):
+                ItemPhoto.objects.create(item=item, image=photo, order=i)
+            if photos:
+                item.photo = photos[0]
+                item.save()
             return redirect('item_detail', item_id=item.item_id)
     return render(request, 'items/create_item.html', {'categories': categories})
 
@@ -188,7 +195,23 @@ def chat_room(request, room_id):
 @login_required
 def inbox(request):
     rooms = ChatRoom.objects.filter(models.Q(borrower=request.user) | models.Q(owner=request.user)).select_related('item', 'borrower', 'owner').prefetch_related('messages').order_by('-created_at')
-    return render(request, 'items/inbox.html', {'chat_rooms': rooms})
+    active_room = None
+    messages_list = None
+    room_id = request.GET.get('room')
+    if room_id:
+        try:
+            active_room = rooms.get(id=room_id)
+            if request.method == 'POST':
+                content = request.POST.get('content', '').strip()
+                if content:
+                    Message.objects.create(room=active_room, sender=request.user, content=content)
+                    receiver = active_room.owner if request.user == active_room.borrower else active_room.borrower
+                    create_notification(receiver, f"ข้อความใหม่จาก {request.user.username}", link=f"/inbox/?room={active_room.id}")
+                    return redirect(f'/inbox/?room={active_room.id}')
+            messages_list = active_room.messages.all().order_by('timestamp')
+        except ChatRoom.DoesNotExist:
+            pass
+    return render(request, 'items/inbox.html', {'chat_rooms': rooms, 'active_room': active_room, 'messages_list': messages_list})
 
 @login_required
 def delivery_details(request, request_id):

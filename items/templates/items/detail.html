@@ -2,95 +2,114 @@
 {% block title %}{{ item.title }} - CamBro{% endblock %}
 
 {% block content %}
-<div class="max-w-6xl mx-auto px-4 py-8 sm:py-12">
+<div class="max-w-6xl mx-auto px-4 py-8">
     <a href="{% url 'item_list' %}" class="inline-flex items-center text-sm text-gray-500 hover:text-main-blue mb-6 transition">
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+        <svg class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
         </svg>
         กลับไปดูของชิ้นอื่น
     </a>
 
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-10 items-start">
-        <div class="relative group">
-            {% if item.photo %}
-                <img src="{{ item.photo.url }}" alt="{{ item.title }}" class="w-full aspect-[4/3] object-cover rounded-[2rem] shadow-2xl border-4 border-white">
-            {% else %}
-                <div class="w-full aspect-[4/3] bg-gray-50 rounded-[2rem] flex items-center justify-center text-9xl border-4 border-dashed border-gray-100">
-                    {{ item.category.icon }}
-                </div>
+    <!-- Photo Gallery -->
+    {% if photos %}
+    <div class="grid grid-cols-3 gap-3 mb-8 rounded-3xl overflow-hidden" id="gallery">
+        <div class="col-span-2 row-span-2">
+            <img src="{{ photos.0.image.url }}" alt="{{ item.title }}"
+                 class="w-full h-full object-cover aspect-[4/3] cursor-pointer rounded-2xl"
+                 onclick="openModal(0)">
+        </div>
+        {% for photo in photos|slice:"1:3" %}
+        <div class="relative">
+            <img src="{{ photo.image.url }}" alt="{{ item.title }}"
+                 class="w-full h-full object-cover aspect-square cursor-pointer rounded-2xl"
+                 onclick="openModal({{ forloop.counter }})">
+            {% if forloop.last and photos|length > 3 %}
+            <div onclick="openModal({{ forloop.counter }})"
+                 class="absolute inset-0 bg-black/50 flex items-center justify-center rounded-2xl cursor-pointer">
+                <span class="text-white font-bold text-xl">+{{ photos|length|add:"-3" }}</span>
+            </div>
             {% endif %}
-            
-            <div class="absolute top-4 left-4 flex gap-2">
-                <span class="bg-green-500/90 backdrop-blur px-4 py-1.5 rounded-full text-xs text-white shadow-sm">
-                    พร้อมให้ยืม
+        </div>
+        {% endfor %}
+    </div>
+    {% elif item.photo %}
+    <div class="mb-8">
+        <img src="{{ item.photo.url }}" alt="{{ item.title }}"
+             class="w-full aspect-[16/7] object-cover rounded-3xl shadow-xl">
+    </div>
+    {% else %}
+    <div class="mb-8 w-full aspect-[16/7] bg-gray-50 rounded-3xl flex items-center justify-center text-9xl border-2 border-dashed border-gray-100">
+        {{ item.category.icon }}
+    </div>
+    {% endif %}
+
+    <!-- Content: 2 columns -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
+        <!-- Left: Info -->
+        <div class="lg:col-span-2">
+            <div class="flex items-center gap-2 mb-2">
+                <span class="text-xs font-bold text-main-blue uppercase tracking-widest">{{ item.get_campus_display }} มธ.</span>
+                <span class="px-2.5 py-0.5 rounded-full text-xs font-bold {% if item.is_free %}bg-emerald-100 text-emerald-600{% else %}bg-amber-100 text-amber-600{% endif %}">
+                    {% if item.is_free %}พร้อมยืมฟรี{% else %}ให้เช่า{% endif %}
                 </span>
             </div>
-        </div>
+            <h1 class="text-3xl sm:text-4xl font-extrabold text-gray-900 mb-4 leading-tight">{{ item.title }}</h1>
 
-        <div class="flex flex-col h-full justify-center">
-            <div class="mb-2">
-                <span class="text-main-blue font-bold text-sm uppercase tracking-widest">{{ item.get_campus_display }} มธ.</span>
-                <h1 class="text-3xl sm:text-4xl font-extrabold text-gray-900 mt-1 mb-4 leading-tight">{{ item.title }}</h1>
-            </div>
-
-            <div class="bg-blue-50/50 rounded-3xl p-5 mb-6 border border-blue-100 flex items-center justify-between">
-                <div>
-                    <p class="text-[10px] text-blue-400 font-bold uppercase tracking-wider mb-1">ค่าประกันความเสียหาย</p>
-                    <p class="text-2xl font-black text-gray-900">
-                        {% if item.is_free %} ฟรี! <span class="text-sm font-normal text-gray-400 ml-1">(ไม่มีมัดจำ)</span>
-                        {% else %} {{ item.deposit_amount|floatformat:0 }}฿ <span class="text-sm font-normal text-gray-400 ml-1">/ ครั้ง</span> {% endif %}
-                    </p>
-                </div>
-                <div class="text-right">
-                    <p class="text-[10px] text-gray-400 font-bold uppercase tracking-wider mb-1">ยืมได้นานสูงสุด</p>
-                    <p class="text-lg font-bold text-gray-700">{{ item.max_days }} วัน</p>
-                </div>
-            </div>
-
-            <div class="mb-8 px-2">
-                <h4 class="text-sm font-bold text-gray-900 mb-2 flex items-center gap-2">
-                    <span class="w-5 h-5 bg-gray-100 rounded-full flex items-center justify-center text-[10px]">📝</span>
-                    รายละเอียดสิ่งของ
-                </h4>
+            <div class="mb-6">
+                <h4 class="text-sm font-bold text-gray-900 mb-2">รายละเอียดสิ่งของ</h4>
                 <p class="text-gray-600 text-sm leading-relaxed">{{ item.description }}</p>
             </div>
 
-            <div class="flex items-center gap-4 mb-8 p-4 rounded-3xl border border-gray-100 bg-white shadow-sm">
-                <div class="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center text-xl shadow-inner">👤</div>
+            <div class="flex items-center gap-4 p-4 rounded-2xl border border-gray-100 bg-white shadow-sm mb-6">
+                <div class="w-11 h-11 bg-gray-100 rounded-full flex items-center justify-center text-xl">👤</div>
                 <div class="flex-1">
                     <p class="text-[10px] text-gray-400 uppercase font-bold tracking-tighter">เจ้าของของชิ้นนี้</p>
                     <a href="{% url 'profile' item.owner.username %}" class="text-sm font-bold text-gray-800 hover:text-main-blue transition">{{ item.owner.username }}</a>
                 </div>
-                <div class="px-3 py-1 bg-gray-50 rounded-full text-[10px] text-gray-400 border border-gray-100">
-                    ยืนยันตัวตนแล้ว ✅
-                </div>
+                <span class="px-3 py-1 bg-gray-50 rounded-full text-[10px] text-gray-400 border border-gray-100">ยืนยันตัวตนแล้ว ✅</span>
             </div>
+        </div>
 
-            <div class="grid grid-cols-2 gap-4">
+        <!-- Right: Price + Actions -->
+        <div class="lg:col-span-1">
+            <div class="bg-white rounded-3xl border border-gray-100 shadow-sm p-5 sticky top-6">
+                <div class="mb-4">
+                    <p class="text-[10px] text-blue-400 font-bold uppercase tracking-wider mb-1">ค่ามัดจำ</p>
+                    <p class="text-3xl font-black text-gray-900">
+                        {% if item.is_free %}ฟรี! <span class="text-sm font-normal text-gray-400">(ไม่มีมัดจำ)</span>
+                        {% else %}{{ item.deposit_amount|floatformat:0 }}฿ <span class="text-sm font-normal text-gray-400">/ ครั้ง</span>{% endif %}
+                    </p>
+                </div>
+                <div class="flex justify-between text-sm mb-5 pb-4 border-b border-gray-50">
+                    <span class="text-gray-500">ยืมได้สูงสุด</span>
+                    <span class="font-bold text-gray-700">{{ item.max_days }} วัน</span>
+                </div>
+
                 {% if user == item.owner %}
-                    <a href="{% url 'delete_item' item.item_id %}" class="col-span-2 py-4 bg-red-50 text-red-500 rounded-2xl font-bold hover:bg-red-100 transition text-center border border-red-100">
-                        ลบประกาศนี้
-                    </a>
+                <a href="{% url 'delete_item' item.item_id %}"
+                   class="block w-full py-3 bg-red-50 text-red-500 rounded-2xl font-bold hover:bg-red-100 transition text-center border border-red-100 text-sm">
+                    ลบประกาศนี้
+                </a>
                 {% else %}
-                    <a href="{% url 'start_chat' item.item_id %}" class="py-4 bg-white border-2 border-main-blue text-main-blue rounded-2xl font-bold hover:bg-blue-50 transition text-center shadow-sm active:scale-95">
-                        ทักแชทสอบถาม
-                    </a>
-                    <a href="{% url 'create_request' item.item_id %}" class="py-4 bg-main-blue text-white rounded-2xl font-bold hover:bg-blue-600 transition text-center shadow-lg shadow-blue-100 active:scale-95">
-                        ขอยืมชิ้นนี้
-                    </a>
+                <a href="{% url 'create_request' item.item_id %}"
+                   class="block w-full py-3 bg-main-blue text-white rounded-2xl font-bold hover:bg-blue-400 transition text-center shadow-lg shadow-blue-100 active:scale-95 text-sm mb-3">
+                    ขอยืมชิ้นนี้
+                </a>
+                <a href="{% url 'start_chat' item.item_id %}"
+                   class="block w-full py-3 bg-white border-2 border-main-blue text-main-blue rounded-2xl font-bold hover:bg-blue-50 transition text-center text-sm">
+                    ทักแชทสอบถาม
+                </a>
                 {% endif %}
             </div>
         </div>
     </div>
-    <!-- Reviews Section -->
-    <div class="mt-12">
-        <div class="flex items-center justify-between mb-6">
-            <h2 class="text-xl font-black text-gray-900">รีวิวจากผู้ยืม</h2>
-            {% if avg_rating %}
-            <span class="text-sm font-bold text-gray-500">{{ avg_rating|floatformat:1 }}/5.0 ({{ reviews.count }} รีวิว)</span>
-            {% endif %}
-        </div>
 
+    <!-- Reviews -->
+    <div class="mt-10">
+        <div class="flex items-center justify-between mb-5">
+            <h2 class="text-xl font-black text-gray-900">รีวิวจากผู้ยืม</h2>
+            {% if avg_rating %}<span class="text-sm font-bold text-gray-500">{{ avg_rating|floatformat:1 }}/5.0 ({{ reviews.count }} รีวิว)</span>{% endif %}
+        </div>
         {% if reviews %}
         <div class="space-y-4">
             {% for review in reviews %}
@@ -99,16 +118,12 @@
                     <div>
                         <p class="font-bold text-gray-900 text-sm">{{ review.reviewer.username }}</p>
                         <div class="flex gap-0.5 mt-1">
-                            {% for i in "12345" %}
-                                <span class="text-lg {% if forloop.counter <= review.rating %}text-yellow-400{% else %}text-gray-200{% endif %}">★</span>
-                            {% endfor %}
+                            {% for i in "12345" %}<span class="text-lg {% if forloop.counter <= review.rating %}text-yellow-400{% else %}text-gray-200{% endif %}">★</span>{% endfor %}
                         </div>
                     </div>
                     <p class="text-xs text-gray-400">{{ review.created_at|timesince }} ที่แล้ว</p>
                 </div>
-                {% if review.comment %}
-                <p class="text-sm text-gray-600 mt-2">{{ review.comment }}</p>
-                {% endif %}
+                {% if review.comment %}<p class="text-sm text-gray-600 mt-2">{{ review.comment }}</p>{% endif %}
             </div>
             {% endfor %}
         </div>
@@ -119,4 +134,29 @@
         {% endif %}
     </div>
 </div>
+
+<!-- Modal -->
+{% if photos %}
+<div id="photo-modal" class="fixed inset-0 bg-black/80 z-50 hidden items-center justify-center p-4">
+    <button onclick="closeModal()" class="absolute top-4 right-4 text-white text-3xl">✕</button>
+    <button onclick="prevPhoto()" class="absolute left-4 text-white text-4xl px-2">‹</button>
+    <button onclick="nextPhoto()" class="absolute right-4 text-white text-4xl px-2">›</button>
+    <img id="modal-img" src="" class="max-h-[90vh] max-w-[90vw] object-contain rounded-2xl">
+    <span id="modal-counter" class="absolute bottom-4 text-white text-sm"></span>
+</div>
+<script>
+const photos = [{% for p in photos %}"{{ p.image.url }}"{% if not forloop.last %},{% endif %}{% endfor %}];
+let current = 0;
+function openModal(i) {
+    current = i;
+    document.getElementById('modal-img').src = photos[i];
+    document.getElementById('modal-counter').textContent = (i+1) + ' / ' + photos.length;
+    document.getElementById('photo-modal').classList.replace('hidden','flex');
+}
+function closeModal() { document.getElementById('photo-modal').classList.replace('flex','hidden'); }
+function prevPhoto() { current = (current - 1 + photos.length) % photos.length; openModal(current); }
+function nextPhoto() { current = (current + 1) % photos.length; openModal(current); }
+document.getElementById('photo-modal').addEventListener('click', function(e){ if(e.target===this) closeModal(); });
+</script>
+{% endif %}
 {% endblock %}
