@@ -177,20 +177,7 @@ def start_chat(request, item_id):
     item = get_object_or_404(Item, item_id=item_id)
     if item.owner == request.user: return redirect('item_detail', item_id=item_id)
     chat, _ = ChatRoom.objects.get_or_create(item=item, borrower=request.user, owner=item.owner)
-    return redirect('chat_room', room_id=chat.id)
-
-@login_required
-def chat_room(request, room_id):
-    chat = get_object_or_404(ChatRoom, id=room_id)
-    if request.user not in [chat.borrower, chat.owner]: return redirect('item_list')
-    if request.method == 'POST':
-        content = request.POST.get('content', '').strip()
-        if content:
-            Message.objects.create(room=chat, sender=request.user, content=content)
-            receiver = chat.owner if request.user == chat.borrower else chat.borrower
-            create_notification(receiver, f"ข้อความใหม่จาก {request.user.username}", link=f"/chats/{chat.id}/")
-            return redirect('chat_room', room_id=chat.id)
-    return render(request, 'items/chat_room.html', {'chat_room': chat, 'messages_list': chat.messages.all().order_by('timestamp')})
+    return redirect(f'/inbox/?room={chat.id}')
 
 @login_required
 def inbox(request):
