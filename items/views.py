@@ -55,14 +55,27 @@ def logout_view(request):
 def item_list(request):
     search_query = request.GET.get('search', '')
     campus_filter = request.GET.get('campus', '')
-    category_slug = request.GET.get('category', '') 
+    category_slug = request.GET.get('category', '')
+    search_query = request.GET.get('search', '')
+    items = Item.objects.filter(is_available=True, status='active').select_related('owner', 'category').order_by('-created_at')
+    if search_query:
+        items = items.filter(models.Q(title__icontains=search_query) | models.Q(description__icontains=search_query))
+    else:
+        items = items[:8]
+    categories = Category.objects.all()
+    return render(request, 'items/list.html', {'items': items, 'categories': categories, 'search_query': search_query})
+
+def all_items(request):
+    search_query = request.GET.get('search', '')
+    campus_filter = request.GET.get('campus', '')
+    category_slug = request.GET.get('category', '')
     items = Item.objects.filter(is_available=True, status='active').select_related('owner', 'category')
     if search_query:
         items = items.filter(models.Q(title__icontains=search_query) | models.Q(description__icontains=search_query))
     if campus_filter: items = items.filter(campus=campus_filter)
     if category_slug: items = items.filter(category__slug=category_slug)
     categories = Category.objects.all()
-    return render(request, 'items/list.html', {'items': items, 'categories': categories, 'selected_category': category_slug, 'selected_campus': campus_filter, 'search_query': search_query})
+    return render(request, 'items/all_items.html', {'items': items, 'categories': categories, 'selected_category': category_slug, 'selected_campus': campus_filter, 'search_query': search_query})
 
 def item_detail(request, item_id):
     item = get_object_or_404(Item.objects.select_related('owner', 'category'), item_id=item_id)

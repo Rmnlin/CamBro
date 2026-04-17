@@ -30,10 +30,11 @@
                 </a>
                 <div class="flex gap-4 items-center">
     <a href="/" class="text-gray-700 hover:text-main-blue">หน้าหลัก</a>
-    {% if user.is_authenticated %}
-        <a href="{% url 'create_item' %}" class="bg-main-blue text-white px-5 py-2 rounded-full shadow-sm hover:opacity-80">+ โพสต์ของ</a>          
+    <a href="{% url 'all_items' %}" class="text-gray-700 hover:text-main-blue">รายการทั้งหมด</a>
+    {% if user.is_authenticated %}     
         <a href="{% url 'inbox' %}" class="text-gray-700 hover:text-main-blue">ข้อความ</a>
         <a href="{% url 'dashboard' %}" class="text-gray-700 hover:text-main-blue">Dashboard</a>
+        <a href="{% url 'create_item' %}" class="bg-main-blue text-white px-5 py-2 rounded-full shadow-sm hover:opacity-80">+ โพสต์ของ</a>     
         
         <div class="flex items-center gap-3 ml-2 border-l pl-4">
             <a href="{% url 'profile' user.username %}" class="text-gray-700 text-sm hover:text-main-blue transition">สวัสดี, <strong>{{ user.username }}</strong></a>
