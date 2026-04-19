@@ -32,10 +32,25 @@
             <h1 class="text-3xl font-black text-gray-900">Dashboard ของฉัน</h1>
             <p class="text-gray-500">จัดการการยืม-คืนสิ่งของทั้งหมดของคุณ</p>
         </div>
-        <a href="{% url 'create_item' %}" class="bg-main-blue text-white px-6 py-2.5 rounded-full font-bold text-sm shadow-lg shadow-blue-100 hover:scale-105 transition">+ โพสต์ของใหม่</a>
     </div>
 
-    <section class="mb-10">
+    <!-- Tabs -->
+    <div class="flex gap-1 bg-gray-100 p-1 rounded-2xl mb-8 w-fit">
+        <button onclick="switchTab('borrowing')" id="tab-borrowing"
+            class="tab-btn px-5 py-2 rounded-xl text-sm font-bold transition bg-white shadow-sm text-gray-900">
+            กำลังยืม <span class="ml-1 text-xs text-gray-400">({{ my_borrowing.count }})</span>
+        </button>
+        <button onclick="switchTab('lending')" id="tab-lending"
+            class="tab-btn px-5 py-2 rounded-xl text-sm font-bold transition text-gray-500">
+            กำลังให้ยืม <span class="ml-1 text-xs text-gray-400">({{ incoming_requests.count }})</span>
+        </button>
+        <button onclick="switchTab('requests')" id="tab-requests"
+            class="tab-btn px-5 py-2 rounded-xl text-sm font-bold transition text-gray-500">
+            คำขอรอตอบ <span class="ml-1 text-xs text-gray-400">({{ pending_count }})</span>
+        </button>
+    </div>
+
+    <section id="section-borrowing" class="mb-10">
         <h2 class="text-xl font-bold mb-4 flex items-center gap-2">📦 ของที่ฉันกำลังยืม</h2>
         <div class="space-y-4">
             {% for borrow in my_borrowing %}
@@ -95,32 +110,70 @@
         </div>
     </section>
 
-    <hr class="mb-10 border-gray-100">
+    </section>
 
-    <section class="mb-10">
-        <h2 class="text-xl font-bold mb-4 flex items-center gap-2">📥 คำขอยืมที่ส่งมาถึงฉัน</h2>
+    <hr class="mb-10 border-gray-100 hidden" id="hr-divider">
+
+    <section id="section-lending" class="mb-10 hidden">
+        <h2 class="text-xl font-bold mb-4 flex items-center gap-2">📤 ของที่ฉันให้ยืม</h2>
+
         <div class="space-y-4">
             {% for req in incoming_requests %}
+            {% if req.status != 'pending' %}
             <div class="bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
                 <div class="flex justify-between items-start mb-4">
                     <div class="flex items-center gap-3">
                         <div class="w-10 h-10 bg-main-blue/10 text-main-blue rounded-full flex items-center justify-center font-bold uppercase">{{ req.borrower.username|slice:":1" }}</div>
                         <div>
-                            <p class="text-sm font-bold text-gray-900 uppercase">{{ req.borrower.username }} <span class="font-normal text-gray-500 text-xs">ขอยืม</span> {{ req.item.title }}</p>
+                            <p class="text-sm font-bold text-gray-900 uppercase">{{ req.borrower.username }} <span class="font-normal text-gray-500 text-xs">ยืม</span> {{ req.item.title }}</p>
                             <p class="text-[10px] text-gray-400">{{ req.created_at|timesince }} ที่แล้ว</p>
                         </div>
+                    </div>
+                    <span class="px-3 py-1 rounded-full text-[10px] font-bold
+                        {% if req.status == 'approved' %}bg-gray-100 text-gray-400
+                        {% elif req.status == 'returning' %}bg-yellow-100 text-yellow-600
+                        {% elif req.status == 'returned' %}bg-gray-100 text-gray-400
+                        {% else %}bg-blue-50 text-blue-500{% endif %}">
+                        {{ req.get_status_display }}
+                    </span>
+                </div>
+                {% if req.status == 'returning' %}
+                <form action="{% url 'return_item' req.request_id %}" method="POST">
+                    {% csrf_token %}
+                    <button class="w-full py-3 bg-main-blue text-white text-xs font-black rounded-xl shadow-lg shadow-blue-100 hover:scale-[1.02] transition">
+                        ยืนยันได้รับของคืนแล้ว ✅
+                    </button>
+                </form>
+                {% endif %}
+            </div>
+            {% endif %}
+            {% endfor %}
+        </div>
+    </section>
+
+    <section id="section-requests" class="mb-10 hidden">
+        <h2 class="text-xl font-bold mb-4 flex items-center gap-2">📥 คำขอยืมที่ส่งมาถึงฉัน</h2>
+        <div class="space-y-4">
+            {% for req in incoming_requests %}
+            {% if req.status == 'pending' %}
+            <div class="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 flex items-center justify-between gap-4">
+                <div class="flex items-center gap-3 flex-1 min-w-0">
+                    <div class="w-10 h-10 bg-main-blue/10 text-main-blue rounded-full flex items-center justify-center font-bold uppercase flex-shrink-0">{{ req.borrower.username|slice:":1" }}</div>
+                    <div class="min-w-0">
+                        <p class="text-sm font-bold text-gray-900">{{ req.borrower.username }} <span class="font-normal text-gray-500">ขอยืม</span> {{ req.item.title }}</p>
+                        <p class="text-[10px] text-gray-400">{{ req.created_at|timesince }} ที่แล้ว</p>
                     </div>
                 </div>
 
                 {% if req.status == 'pending' %}
-                <div class="flex gap-2">
-                    <form action="{% url 'approve_request' req.request_id %}" method="POST" class="flex-1">
+                <div class="flex gap-2 flex-shrink-0">
+                    <form action="{% url 'decline_request' req.request_id %}" method="POST">
                         {% csrf_token %}
-                        <button class="w-full py-2 bg-green-500 text-white text-xs font-bold rounded-xl hover:bg-green-600 transition">อนุมัติ</button>
+                        <button class="px-5 py-2 bg-white border border-red-200 text-red-500 text-sm font-bold rounded-full hover:bg-red-50 transition">ปฏิเสธ</button>
                     </form>
-                    <form action="{% url 'decline_request' req.request_id %}" method="POST" class="flex-1">
+                    <form action="{% url 'approve_request' req.request_id %}" method="POST">
                         {% csrf_token %}
-                        <button class="w-full py-2 bg-red-50 text-red-500 text-xs font-bold rounded-xl hover:bg-red-100 transition">ปฏิเสธ</button>
+                        <button class="px-5 py-2 bg-green-500 text-white text-sm font-bold rounded-full hover:bg-green-600 transition shadow-md shadow-green-100">อนุมัติ</button>
                     </form>
                 </div>
                 {% elif req.status == 'returning' %}
@@ -134,9 +187,23 @@
                 <p class="text-center py-2 bg-gray-50 rounded-xl text-[10px] text-gray-400 font-bold uppercase">{{ req.get_status_display }}</p>
                 {% endif %}
             </div>
+            {% endif %}
             {% endfor %}
         </div>
     </section>
 
 </div>
+
+<script>
+function switchTab(name) {
+    ['borrowing', 'lending', 'requests'].forEach(t => {
+        document.getElementById('section-' + t).classList.add('hidden');
+        document.getElementById('tab-' + t).classList.remove('bg-white', 'shadow-sm', 'text-gray-900');
+        document.getElementById('tab-' + t).classList.add('text-gray-500');
+    });
+    document.getElementById('section-' + name).classList.remove('hidden');
+    document.getElementById('tab-' + name).classList.add('bg-white', 'shadow-sm', 'text-gray-900');
+    document.getElementById('tab-' + name).classList.remove('text-gray-500');
+}
+</script>
 {% endblock %}
