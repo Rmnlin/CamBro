@@ -1,8 +1,8 @@
 {% extends 'base.html' %}
-{% block title %}โพสต์สิ่งของ - TU Exchange{% endblock %}
+{% block title %}{% if item %}แก้ไขสิ่งของ{% else %}โพสต์สิ่งของ{% endif %} - TU Exchange{% endblock %}
 {% block content %}
 <div class="max-w-2xl mx-auto px-4 py-8">
-    <h1 class="text-2xl font-bold text-gray-900 mb-6">โพสต์สิ่งของให้ยืม</h1>
+    <h1 class="text-2xl font-bold text-gray-900 mb-6">{% if item %}แก้ไขสิ่งของ{% else %}โพสต์สิ่งของให้ยืม{% endif %}</h1>
 
     {% if messages %}
         {% for message in messages %}
@@ -14,12 +14,14 @@
         {% endfor %}
     {% endif %}
 
-    <form method="post" enctype="multipart/form-data" class="bg-white rounded-lg shadow p-6 space-y-5">
+    <form method="post" enctype="multipart/form-data"
+          {% if item %}action="{% url 'edit_item' item.item_id %}"{% endif %}
+          class="bg-white rounded-lg shadow p-6 space-y-5">
         {% csrf_token %}
 
         <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">ชื่อสิ่งของ *</label>
-            <input type="text" name="title" required
+            <input type="text" name="title" required value="{{ item.title }}"
                 class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-tu-red"
                 placeholder="เช่น ตำรา Calculus I, เครื่องคิดเลข Casio">
         </div>
@@ -30,7 +32,7 @@
                 class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-tu-red">
                 <option value="">-- เลือกหมวดหมู่ --</option>
                 {% for category in categories %}
-                    <option value="{{ category.category_id }}">{{ category.icon }} {{ category.name }}</option>
+                    <option value="{{ category.category_id }}" {% if item.category == category %}selected{% endif %}>{{ category.icon }} {{ category.name }}</option>
                 {% endfor %}
             </select>
         </div>
@@ -39,7 +41,7 @@
             <label class="block text-sm font-medium text-gray-700 mb-1">รายละเอียด *</label>
             <textarea name="description" required rows="3"
                 class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-tu-red"
-                placeholder="อธิบายสภาพ ข้อมูลเพิ่มเติม..."></textarea>
+                placeholder="อธิบายสภาพ ข้อมูลเพิ่มเติม...">{{ item.description }}</textarea>
         </div>
 
         <div class="grid grid-cols-2 gap-4">
@@ -47,25 +49,25 @@
                 <label class="block text-sm font-medium text-gray-700 mb-1">สภาพของ</label>
                 <select name="condition"
                     class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-tu-red">
-                    <option value="new">ใหม่</option>
-                    <option value="good" selected>ดี</option>
-                    <option value="fair">พอใช้</option>
+                    <option value="new" {% if item.condition == 'new' %}selected{% endif %}>ใหม่</option>
+                    <option value="good" {% if item.condition == 'good' or not item %}selected{% endif %}>ดี</option>
+                    <option value="fair" {% if item.condition == 'fair' %}selected{% endif %}>พอใช้</option>
                 </select>
             </div>
             <div>
                 <label class="block text-sm font-medium text-gray-700 mb-1">วิทยาเขต</label>
                 <select name="campus"
                     class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-tu-red">
-                    <option value="rangsit">รังสิต</option>
-                    <option value="tha_prachan">ท่าพระจันทร์</option>
-                    <option value="lampang">ลำปาง</option>
+                    <option value="rangsit" {% if item.campus == 'rangsit' or not item %}selected{% endif %}>รังสิต</option>
+                    <option value="tha_prachan" {% if item.campus == 'tha_prachan' %}selected{% endif %}>ท่าพระจันทร์</option>
+                    <option value="lampang" {% if item.campus == 'lampang' %}selected{% endif %}>ลำปาง</option>
                 </select>
             </div>
         </div>
 
         <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">จุดนัดรับ *</label>
-            <input type="text" name="pickup_location" required
+            <input type="text" name="pickup_location" required value="{{ item.pickup_location }}"
                 class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-tu-red"
                 placeholder="เช่น หน้าตึก SC, หอสมุดปรีดี">
         </div>
@@ -74,23 +76,23 @@
             <label class="block text-sm font-medium text-gray-700 mb-2">ประเภทการยืม</label>
             <div class="flex gap-4 mb-3">
                 <label class="flex items-center gap-2 cursor-pointer">
-                    <input type="radio" name="is_free" value="true" checked>
+                    <input type="radio" name="is_free" value="true" {% if item.is_free or not item %}checked{% endif %}>
                     <span>ฟรี</span>
                 </label>
                 <label class="flex items-center gap-2 cursor-pointer">
-                    <input type="radio" name="is_free" value="false">
+                    <input type="radio" name="is_free" value="false" {% if item and not item.is_free %}checked{% endif %}>
                     <span>เช่า</span>
                 </label>
             </div>
             <label class="block text-xs text-gray-500 mb-1">มัดจำ (บาท) — ถ้าไม่มีมัดจำ ใส่ 0</label>
-            <input type="number" name="deposit_amount" min="0" value="0"
+            <input type="number" name="deposit_amount" min="0" value="{% if item %}{{ item.deposit_amount }}{% else %}0{% endif %}"
                 class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-tu-red"
                 placeholder="0">
         </div>
 
         <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">ยืมได้สูงสุด (วัน)</label>
-            <input type="number" name="max_days" value="7" min="1" max="90"
+            <input type="number" name="max_days" value="{% if item %}{{ item.max_days }}{% else %}7{% endif %}" min="1" max="90"
                 class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-tu-red">
         </div>
 
@@ -101,6 +103,7 @@
             <p class="text-xs text-gray-400 mt-1">รูปแรกจะเป็นรูปหลัก</p>
         </div>
 
+        {% if not item %}
         <div class="border-t border-gray-200 pt-5 mt-5">
             <h3 class="text-lg font-semibold text-main-blue flex items-center gap-2 mb-2">
                  แพ็กเกจประกันภัย (ทางเลือก)
@@ -162,10 +165,11 @@
                 </label>
             </div>
         </div>
+        {% endif %}
 
         <button type="submit"
             class="w-full bg-main-blue text-white py-3 rounded-lg font-semibold shadow-sm hover:opacity-80 transition mt-8">
-            โพสต์สิ่งของ
+            {% if item %}บันทึกการแก้ไข{% else %}โพสต์สิ่งของ{% endif %}
         </button>
     </form>
 </div>

@@ -1,13 +1,11 @@
 from django.db import models
-from decimal import Decimal
-from decimal import Decimal
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.models import User
 from django.contrib import messages
 from django.utils import timezone
-from .models import Item, Category, BorrowRequest, ChatRoom, Message, Notification, Rider, Review, ItemPhoto
+from .models import Item, Category, BorrowRequest, ChatRoom, Message, Notification, Rider, Review, ItemPhoto, UserProfile
 
 # --- Utility ---
 def create_notification(user, message, link='/dashboard/'):
@@ -134,7 +132,7 @@ def edit_item(request, item_id):
         item.max_days = request.POST.get('max_days', 7) or 7
         item.save()
         return redirect('item_detail', item_id=item.item_id)
-    return render(request, 'items/edit_item.html', {'item': item, 'categories': categories})
+    return render(request, 'items/create_item.html', {'item': item, 'categories': categories})
 
 @login_required
 def dashboard(request):
@@ -169,39 +167,11 @@ def create_request(request, item_id):
         start_date = request.POST.get('start_date')
         end_date = request.POST.get('end_date')
         message = request.POST.get('message', '')
-        if item.is_free and item.deposit_amount == 0:
-            BorrowRequest.objects.create(item=item, borrower=request.user, lender=item.owner,
-                start_date=start_date, end_date=end_date, borrower_message=message)
-            create_notification(item.owner, f"มีคนสนใจขอยืม {item.title}!")
-            return redirect('item_detail', item_id=item.item_id)
-        else:
-            request.session['pending_request'] = {'start_date': start_date, 'end_date': end_date, 'message': message}
-            return redirect('payment_review', item_id=item.item_id)
-    return render(request, 'items/request_form.html', {'item': item})
-
-@login_required
-def payment_review(request, item_id):
-    from datetime import date as date_type
-    item = get_object_or_404(Item, item_id=item_id)
-    pending = request.session.get('pending_request')
-    if not pending:
-        return redirect('create_request', item_id=item_id)
-    start = date_type.fromisoformat(pending['start_date'])
-    end = date_type.fromisoformat(pending['end_date'])
-    days = (end - start).days
-    deposit = item.deposit_amount
-    platform_fee = Decimal('0')
-    total = deposit
-    if request.method == 'POST':
         BorrowRequest.objects.create(item=item, borrower=request.user, lender=item.owner,
-            start_date=pending['start_date'], end_date=pending['end_date'], borrower_message=pending.get('message', ''))
-        del request.session['pending_request']
+            start_date=start_date, end_date=end_date, borrower_message=message)
         create_notification(item.owner, f"มีคนสนใจขอยืม {item.title}!")
         return redirect('item_detail', item_id=item.item_id)
-    return render(request, 'items/payment_review.html', {
-        'item': item, 'start_date': start, 'end_date': end,
-        'days': days, 'deposit': deposit, 'platform_fee': platform_fee, 'total': total,
-    })
+    return render(request, 'items/request_form.html', {'item': item})
 
 @login_required
 def approve_request(request, request_id):
@@ -284,11 +254,26 @@ def return_completed(request, request_id):
     already_reviewed = Review.objects.filter(borrow_request=req).exists()
     return render(request, 'items/return_completed.html', {'borrow_request': req, 'already_reviewed': already_reviewed})
 
+@login_required
+def edit_profile(request):
+    user_profile, _ = UserProfile.objects.get_or_create(user=request.user)
+    if request.method == 'POST':
+        request.user.email = request.POST.get('email', '').strip()
+        request.user.save()
+        user_profile.phone_number = request.POST.get('phone_number', '').strip()
+        user_profile.faculty = request.POST.get('faculty', '').strip()
+        if request.FILES.get('avatar'):
+            user_profile.avatar = request.FILES['avatar']
+        user_profile.save()
+    return redirect('profile', username=request.user.username)
+
 def profile_view(request, username):
     profile_user = get_object_or_404(User, username=username)
+    user_profile, _ = UserProfile.objects.get_or_create(user=profile_user)
     reviews = Review.objects.filter(reviewee=profile_user, borrow_request__isnull=True).select_related('reviewer').order_by('-created_at')
     avg_rating = reviews.aggregate(models.Avg('rating'))['rating__avg']
-    active_items = Item.objects.filter(owner=profile_user, is_available=True, status='active')
+    all_items = Item.objects.filter(owner=profile_user).select_related('category').order_by('-created_at')
+    total_lent = BorrowRequest.objects.filter(lender=profile_user, status='returned').count()
     if request.method == 'POST' and request.user.is_authenticated and request.user != profile_user:
         rating = request.POST.get('rating')
         comment = request.POST.get('comment', '').strip()
@@ -298,9 +283,11 @@ def profile_view(request, username):
 
     return render(request, 'items/profile.html', {
         'profile_user': profile_user,
+        'user_profile': user_profile,
         'reviews': reviews,
         'avg_rating': avg_rating,
-        'active_items': active_items,
+        'all_items': all_items,
+        'total_lent': total_lent,
     })
 
 @login_required

@@ -1,56 +1,131 @@
 {% extends 'base.html' %}
 {% block title %}ขอยืม {{ item.title }} - CamBro{% endblock %}
 {% block content %}
-<div class="max-w-lg mx-auto px-4 py-8">
-    <div class="bg-white rounded-3xl shadow p-6">
-        <h1 class="text-xl font-bold text-gray-900 mb-1">ขอยืมสิ่งของ</h1>
-        <p class="text-gray-500 text-sm mb-6">{{ item.title }}</p>
+<div class="max-w-5xl mx-auto px-4 py-8">
+    <a href="{% url 'item_detail' item.item_id %}" class="inline-flex items-center text-sm text-gray-500 hover:text-main-blue mb-6 transition">
+        <svg class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+        </svg>
+        กลับ
+    </a>
 
-        {% if messages %}
-            {% for message in messages %}
-                <div class="mb-4 px-4 py-3 rounded text-sm bg-red-100 text-red-700 border border-red-300">
-                    {{ message }}
+    {% if messages %}
+        {% for message in messages %}
+            <div class="mb-4 px-4 py-3 rounded text-sm bg-red-100 text-red-700 border border-red-300">{{ message }}</div>
+        {% endfor %}
+    {% endif %}
+
+    <form method="post" id="request-form">
+        {% csrf_token %}
+        <div class="grid grid-cols-1 lg:grid-cols-5 gap-6 items-start">
+
+            <!-- Left: Form -->
+            <div class="lg:col-span-3 bg-white rounded-3xl shadow-sm border border-gray-100 p-6 space-y-5">
+                <div>
+                    <h1 class="text-xl font-black text-gray-900">ขอยืมสิ่งของ</h1>
+                    <p class="text-sm text-gray-400 mt-0.5">{{ item.title }}</p>
                 </div>
-            {% endfor %}
-        {% endif %}
 
-        <form method="post">
-            {% csrf_token %}
-            <div class="mb-4">
-                <label class="block text-sm font-medium text-gray-700 mb-1">วันที่เริ่มยืม</label>
-                <input type="date" name="start_date" required
-                    class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-tu-red">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">วันที่เริ่มยืม</label>
+                    <input type="date" name="start_date" id="start_date" required
+                        class="w-full px-4 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-main-blue">
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">วันที่คืน <span class="text-gray-400">(สูงสุด {{ item.max_days }} วัน)</span></label>
+                    <input type="date" name="end_date" id="end_date" required
+                        class="w-full px-4 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-main-blue">
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">ข้อความถึงเจ้าของ <span class="text-gray-400">(ถ้ามี)</span></label>
+                    <textarea name="message" rows="3"
+                        class="w-full px-4 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-main-blue"
+                        placeholder="แนะนำตัว หรือบอกรายละเอียดเพิ่มเติม..."></textarea>
+                </div>
             </div>
-            <div class="mb-4">
-                <label class="block text-sm font-medium text-gray-700 mb-1">วันที่คืน (สูงสุด {{ item.max_days }} วัน)</label>
-                <input type="date" name="end_date" required
-                    class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-tu-red">
-            </div>
-            <div class="mb-6">
-                <label class="block text-sm font-medium text-gray-700 mb-1">ข้อความถึงเจ้าของ (ถ้ามี)</label>
-                <textarea name="message" rows="3"
-                    class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-tu-red"
-                    placeholder="แนะนำตัว หรือบอกรายละเอียดเพิ่มเติม..."></textarea>
-            </div>
-            <div class="flex gap-3">
-                <a href="{% url 'item_detail' item.item_id %}" class="flex-1 text-center bg-gray-50 text-gray-500 py-3 rounded-xl font-bold hover:bg-gray-100 transition border border-gray-100">ยกเลิก
-                </a>
-                <button type="submit" class="flex-1 bg-[#85d7ff] text-gray-800 py-3 rounded-xl font-bold hover:bg-[#74c6ee] transition shadow-sm">ส่งคำขอ
+
+            <!-- Right: Summary -->
+            <div class="lg:col-span-2 sticky top-6 space-y-4">
+                <!-- Item card -->
+                <div class="bg-white rounded-3xl border border-gray-100 shadow-sm p-4 flex gap-3 items-center">
+                    {% if item.photo %}
+                    <img src="{{ item.photo.url }}" class="w-14 h-14 rounded-xl object-cover flex-shrink-0">
+                    {% else %}
+                    <div class="w-14 h-14 bg-gray-100 rounded-xl flex items-center justify-center text-2xl flex-shrink-0">{{ item.category.icon }}</div>
+                    {% endif %}
+                    <div class="min-w-0">
+                        <p class="font-bold text-gray-900 text-sm truncate">{{ item.title }}</p>
+                        <p class="text-xs text-gray-400">เจ้าของ: {{ item.owner.username }}</p>
+                        <p class="text-xs text-gray-500 mt-1" id="date-summary">เลือกวันที่ด้านซ้าย</p>
+                    </div>
+                </div>
+
+                <!-- Price breakdown -->
+                <div class="bg-white rounded-3xl border border-gray-100 shadow-sm p-5">
+                    <div class="space-y-3 text-sm">
+                        <div class="flex justify-between text-gray-700">
+                            <span>ค่าเช่า</span>
+                            <span class="font-semibold">{{ item.deposit_amount|floatformat:0 }}฿</span>
+                        </div>
+                        <div class="flex justify-between text-gray-700">
+                            <span>มัดจำ <span class="text-gray-400">(คืนเมื่อส่งของคืน)</span></span>
+                            <span class="font-semibold">0฿</span>
+                        </div>
+                        <div class="flex justify-between text-gray-700">
+                            <span>ค่าบริการแพลตฟอร์ม <span class="text-gray-400">(0%)</span></span>
+                            <span class="font-semibold">0฿</span>
+                        </div>
+                        <div class="border-t border-gray-100 pt-3 flex justify-between">
+                            <span class="font-black text-gray-900">รวมทั้งหมด</span>
+                            <span class="font-black text-gray-900 text-base">{{ item.deposit_amount|floatformat:0 }}฿</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Protect banner -->
+                <div class="bg-emerald-50 border border-emerald-100 rounded-2xl px-4 py-3 flex gap-2 items-start">
+                    <span class="text-emerald-500 mt-0.5 text-sm">✔</span>
+                    <p class="text-xs text-emerald-700">
+                        <span class="font-bold">ได้รับการคุ้มครองโดย CamBro Protect</span> —
+                        มัดจำคืนอัตโนมัติเมื่อส่งของคืนสำเร็จ ข้อพิพาทได้รับการไกล่เกลี่ยภายใน 48 ชม.
+                    </p>
+                </div>
+
+                <button type="submit"
+                    class="w-full py-3 bg-main-blue text-white rounded-2xl font-black hover:bg-blue-400 transition shadow-lg shadow-blue-100 active:scale-95 text-sm">
+                    ยืนยันและส่งคำขอ
                 </button>
+                <p class="text-xs text-center text-gray-400">ยังไม่มีการเรียกเก็บเงิน — มัดจำถูกอายัดไว้และจะเรียกเก็บเมื่อเจ้าของอนุมัติ</p>
             </div>
-        </form>
-    </div>
+        </div>
+    </form>
 </div>
 
 <script>
-document.querySelector('[name="start_date"]').addEventListener('change', function() {
+const startInput = document.getElementById('start_date');
+const endInput = document.getElementById('end_date');
+const maxDays = {{ item.max_days }};
+
+startInput.addEventListener('change', function () {
     const start = new Date(this.value);
     const max = new Date(this.value);
-    max.setDate(max.getDate() + {{ item.max_days }});
-    const endInput = document.querySelector('[name="end_date"]');
+    max.setDate(max.getDate() + maxDays);
     endInput.min = this.value;
     endInput.max = max.toISOString().split('T')[0];
     endInput.value = '';
+    updateSummary();
 });
+
+endInput.addEventListener('change', updateSummary);
+
+function updateSummary() {
+    const s = startInput.value, e = endInput.value;
+    if (!s || !e) return;
+    const days = Math.round((new Date(e) - new Date(s)) / 86400000);
+    const fmt = d => new Date(d).toLocaleDateString('th-TH', {day: 'numeric', month: 'short', year: 'numeric'});
+    document.getElementById('date-summary').textContent = fmt(s) + ' → ' + fmt(e) + ' (' + days + ' วัน)';
+}
 </script>
 {% endblock %}

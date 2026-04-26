@@ -151,6 +151,15 @@ class ItemPhoto(models.Model):
     def __str__(self):
         return f"รูปของ {self.item.title}"
 
+class UserProfile(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile')
+    phone_number = models.CharField(max_length=20, blank=True)
+    faculty = models.CharField(max_length=100, blank=True)
+    avatar = models.ImageField(upload_to='avatars/', blank=True, null=True)
+
+    def __str__(self):
+        return f"Profile of {self.user.username}"
+
 class Review(models.Model):
     RATING_CHOICES = [(i, i) for i in range(1, 6)]
 

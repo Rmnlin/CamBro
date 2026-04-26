@@ -7,9 +7,13 @@
     <!-- Profile Card -->
     <div class="bg-white rounded-3xl p-6 shadow-sm border border-gray-100 mb-8 flex items-center justify-between gap-4">
         <div class="flex items-center gap-4">
-            <div class="w-16 h-16 bg-main-blue/10 text-main-blue rounded-2xl flex items-center justify-center text-3xl font-black">
+            {% if user_profile.avatar %}
+            <img src="{{ user_profile.avatar.url }}" class="w-16 h-16 rounded-2xl object-cover flex-shrink-0">
+            {% else %}
+            <div class="w-16 h-16 bg-main-blue/10 text-main-blue rounded-2xl flex items-center justify-center text-3xl font-black flex-shrink-0">
                 {{ profile_user.username|slice:":1"|upper }}
             </div>
+            {% endif %}
             <div>
                 <h1 class="text-xl font-black text-gray-900">{{ profile_user.username }}</h1>
                 <p class="text-xs text-gray-400">สมาชิกตั้งแต่ {{ profile_user.date_joined|date:"M Y" }}</p>
@@ -26,27 +30,120 @@
         </div>
     </div>
 
-    <!-- Active Items -->
-    {% if active_items %}
-    <section class="mb-8">
-        <h2 class="text-lg font-black text-gray-900 mb-4">ของที่กำลังปล่อยให้ยืม</h2>
-        <div class="grid grid-cols-2 sm:grid-cols-3 gap-4">
-            {% for item in active_items %}
-            <a href="{% url 'item_detail' item.item_id %}" class="bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition overflow-hidden">
-                {% if item.photo %}
-                    <img src="{{ item.photo.url }}" class="w-full aspect-square object-cover">
-                {% else %}
-                    <div class="w-full aspect-square bg-gray-50 flex items-center justify-center text-4xl">{{ item.category.icon }}</div>
-                {% endif %}
-                <div class="p-3">
-                    <p class="text-sm font-bold text-gray-800 truncate">{{ item.title }}</p>
-                    <p class="text-xs text-gray-400">{{ item.get_campus_display }}</p>
+    <!-- Private Section (owner only) -->
+    {% if user == profile_user %}
+    <div class="mb-8">
+        <div class="flex items-center gap-2 px-4 py-2 bg-amber-50 border border-amber-100 rounded-2xl text-xs text-amber-700 font-medium mb-4">
+            🔒 ส่วนนี้มองเห็นเฉพาะคุณ
+        </div>
+        <div class="bg-white rounded-3xl border border-gray-100 shadow-sm p-6">
+            <div class="flex items-center justify-between mb-4">
+                <p class="text-xs font-bold text-gray-400 uppercase tracking-wider">ข้อมูลส่วนตัว</p>
+                <button onclick="toggleEdit()" id="edit-btn"
+                    class="text-xs font-medium text-gray-500 border border-gray-200 rounded-lg px-3 py-1 hover:bg-gray-100 transition">แก้ไข</button>
+            </div>
+
+            <!-- Display mode -->
+            <div id="view-mode" class="space-y-3 text-sm">
+                <div class="flex justify-between">
+                    <span class="text-gray-500">อีเมล</span>
+                    <span class="font-medium text-gray-800">{{ profile_user.email|default:"—" }}</span>
                 </div>
+                <div class="flex justify-between">
+                    <span class="text-gray-500">เบอร์โทร</span>
+                    <span class="font-medium text-gray-800">{{ user_profile.phone_number|default:"—" }}</span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="text-gray-500">คณะ</span>
+                    <span class="font-medium text-gray-800">{{ user_profile.faculty|default:"—" }}</span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="text-gray-500">สมาชิกตั้งแต่</span>
+                    <span class="font-medium text-gray-800">{{ profile_user.date_joined|date:"M Y" }}</span>
+                </div>
+            </div>
+
+            <!-- Edit mode -->
+            <form id="edit-mode" method="post" action="{% url 'edit_profile' %}" enctype="multipart/form-data" class="hidden space-y-3 text-sm">
+                {% csrf_token %}
+                <div class="flex items-center gap-3">
+                    <label class="text-gray-500 w-24 flex-shrink-0">รูปโปรไฟล์</label>
+                    <input type="file" name="avatar" accept="image/*"
+                        class="flex-1 text-sm text-gray-600">
+                </div>
+                <div class="flex items-center gap-3">
+                    <label class="text-gray-500 w-24 flex-shrink-0">อีเมล</label>
+                    <input type="email" name="email" value="{{ profile_user.email }}"
+                        class="flex-1 px-3 py-1.5 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-main-blue">
+                </div>
+                <div class="flex items-center gap-3">
+                    <label class="text-gray-500 w-24 flex-shrink-0">เบอร์โทร</label>
+                    <input type="text" name="phone_number" value="{{ user_profile.phone_number }}"
+                        class="flex-1 px-3 py-1.5 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-main-blue"
+                        placeholder="08x-xxx-xxxx">
+                </div>
+                <div class="flex items-center gap-3">
+                    <label class="text-gray-500 w-24 flex-shrink-0">คณะ</label>
+                    <input type="text" name="faculty" value="{{ user_profile.faculty }}"
+                        class="flex-1 px-3 py-1.5 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-main-blue"
+                        placeholder="เช่น วิทยาศาสตร์และเทคโนโลยี">
+                </div>
+                <div class="flex gap-2 pt-2">
+                    <button type="submit"
+                        class="flex-1 py-2 bg-main-blue text-white rounded-xl text-sm font-bold hover:opacity-80 transition">บันทึก</button>
+                    <button type="button" onclick="toggleEdit()"
+                        class="flex-1 py-2 bg-gray-100 text-gray-600 rounded-xl text-sm font-bold hover:bg-gray-200 transition">ยกเลิก</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    <script>
+    function toggleEdit() {
+        const view = document.getElementById('view-mode');
+        const form = document.getElementById('edit-mode');
+        const btn = document.getElementById('edit-btn');
+        const isEditing = !form.classList.contains('hidden');
+        view.classList.toggle('hidden', !isEditing);
+        form.classList.toggle('hidden', isEditing);
+        btn.textContent = isEditing ? 'แก้ไข' : 'ยกเลิก';
+    }
+    </script>
+    {% endif %}
+
+    <!-- Items List -->
+    <section class="mb-8">
+        <h2 class="text-lg font-black text-gray-900 mb-4">ของที่ลงไว้</h2>
+        {% if all_items %}
+        <div class="space-y-3">
+            {% for item in all_items %}
+            <a href="{% url 'item_detail' item.item_id %}"
+               class="flex items-center gap-4 bg-white rounded-2xl border border-gray-100 shadow-sm p-4 hover:shadow-md transition">
+                {% if item.photo %}
+                    <img src="{{ item.photo.url }}" class="w-12 h-12 rounded-xl object-cover flex-shrink-0">
+                {% else %}
+                    <div class="w-12 h-12 bg-gray-50 rounded-xl flex items-center justify-center text-2xl flex-shrink-0">{{ item.category.icon }}</div>
+                {% endif %}
+                <div class="flex-1 min-w-0">
+                    <p class="text-sm font-bold text-gray-900 truncate">{{ item.title }}</p>
+                    <p class="text-xs text-gray-400 mt-0.5">
+                        {% if item.deposit_amount > 0 %}฿{{ item.deposit_amount|floatformat:0 }} · {% endif %}{{ item.get_campus_display }}
+                    </p>
+                </div>
+                <span class="text-xs font-bold px-2.5 py-1 rounded-full flex-shrink-0
+                    {% if item.status == 'borrowed' %}bg-amber-100 text-amber-600
+                    {% elif item.status == 'active' %}bg-emerald-100 text-emerald-600
+                    {% else %}bg-gray-100 text-gray-500{% endif %}">
+                    {% if item.status == 'borrowed' %}ถูกยืม{% elif item.status == 'active' %}ว่าง{% else %}ปิด{% endif %}
+                </span>
             </a>
             {% endfor %}
         </div>
+        {% else %}
+        <div class="text-center py-8 bg-gray-50 rounded-2xl border-2 border-dashed border-gray-200">
+            <p class="text-gray-400 text-sm">ยังไม่มีของที่ลงไว้</p>
+        </div>
+        {% endif %}
     </section>
-    {% endif %}
 
     <!-- Write Review Form -->
     {% if user.is_authenticated and user != profile_user %}
