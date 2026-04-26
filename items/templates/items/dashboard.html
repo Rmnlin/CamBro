@@ -3,30 +3,7 @@
 {% block title %}Dashboard - CamBro{% endblock %}
 
 {% block content %}
-<div class="max-w-4xl mx-auto px-4 pt-6 pb-20">
-    
-    {% if user.notifications.all %}
-    <div class="mb-8">
-        {% for note in user.notifications.all|dictsortreversed:"created_at"|slice:":3" %}
-        <div class="bg-blue-50 border-l-4 border-main-blue p-4 rounded-r-xl flex justify-between items-center shadow-sm mb-3">
-            <div class="flex items-center gap-3">
-                <span class="text-xl">🔔</span>
-                <div>
-                    <p class="text-sm text-blue-800 font-medium">{{ note.message }}</p>
-                    <p class="text-xs text-blue-400">{{ note.created_at|timesince }} ที่แล้ว</p>
-                </div>
-            </div>
-            {% if not note.is_read %}
-            <form action="{% url 'mark_notification_read' note.id %}" method="POST">
-                {% csrf_token %}
-                <button type="submit" class="text-xs bg-white px-3 py-1 rounded-full border border-blue-200 text-blue-600 hover:bg-blue-50 transition">รับทราบ</button>
-            </form>
-            {% endif %}
-        </div>
-        {% endfor %}
-    </div>
-    {% endif %}
-
+<div class="max-w-6xl mx-auto px-4 pt-6 pb-20">
     <div class="flex justify-between items-end mb-6">
         <div>
             <h1 class="text-3xl font-black text-gray-900">Dashboard ของฉัน</h1>
@@ -34,21 +11,24 @@
         </div>
     </div>
 
-    <!-- Tabs -->
-    <div class="flex gap-1 bg-gray-100 p-1 rounded-2xl mb-8 w-fit">
-        <button onclick="switchTab('borrowing')" id="tab-borrowing"
-            class="tab-btn px-5 py-2 rounded-xl text-sm font-bold transition bg-white shadow-sm text-gray-900">
-            กำลังยืม <span class="ml-1 text-xs text-gray-400">({{ my_borrowing.count }})</span>
-        </button>
-        <button onclick="switchTab('lending')" id="tab-lending"
-            class="tab-btn px-5 py-2 rounded-xl text-sm font-bold transition text-gray-500">
-            กำลังให้ยืม <span class="ml-1 text-xs text-gray-400">({{ incoming_requests.count }})</span>
-        </button>
-        <button onclick="switchTab('requests')" id="tab-requests"
-            class="tab-btn px-5 py-2 rounded-xl text-sm font-bold transition text-gray-500">
-            คำขอรอตอบ <span class="ml-1 text-xs text-gray-400">({{ pending_count }})</span>
-        </button>
-    </div>
+    <div class="flex gap-6 items-start">
+        <!-- Left: main content -->
+        <div class="flex-1 min-w-0">
+            <!-- Tabs -->
+            <div class="flex gap-1 bg-gray-100 p-1 rounded-2xl mb-8 w-fit">
+                <button onclick="switchTab('borrowing')" id="tab-borrowing"
+                    class="tab-btn px-5 py-2 rounded-xl text-sm font-bold transition bg-white shadow-sm text-gray-900">
+                    กำลังยืม <span class="ml-1 text-xs text-gray-400">({{ my_borrowing.count }})</span>
+                </button>
+                <button onclick="switchTab('lending')" id="tab-lending"
+                    class="tab-btn px-5 py-2 rounded-xl text-sm font-bold transition text-gray-500">
+                    กำลังให้ยืม <span class="ml-1 text-xs text-gray-400">({{ incoming_requests.count }})</span>
+                </button>
+                <button onclick="switchTab('requests')" id="tab-requests"
+                    class="tab-btn px-5 py-2 rounded-xl text-sm font-bold transition text-gray-500">
+                    คำขอรอตอบ <span class="ml-1 text-xs text-gray-400">({{ pending_count }})</span>
+                </button>
+            </div>
 
     <section id="section-borrowing" class="mb-10">
         <h2 class="text-xl font-bold mb-4 flex items-center gap-2">📦 ของที่ฉันกำลังยืม</h2>
@@ -191,6 +171,43 @@
             {% endfor %}
         </div>
     </section>
+        </div><!-- end left -->
+
+        <!-- Right: Recent Activity -->
+        <div class="w-96 flex-shrink-0">
+            <div class="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 sticky top-6">
+                <h2 class="text-sm font-bold text-black-400 uppercase tracking-widest mb-4">Recent Activity</h2>
+                {% if activity %}
+                <div class="space-y-4">
+                    {% for act in activity|slice:":8" %}
+                    <div class="flex items-center gap-3">
+                        <div class="w-9 h-9 rounded-full flex items-center justify-center font-bold text-sm flex-shrink-0
+                            {% if act.type == 'requested' %}bg-purple-100 text-purple-600
+                            {% elif act.type == 'returned' %}bg-green-100 text-green-600
+                            {% elif act.type == 'borrowed' %}bg-yellow-100 text-yellow-600
+                            {% else %}bg-blue-100 text-blue-600{% endif %}">
+                            {{ act.user.username|slice:":1"|upper }}
+                        </div>
+                        <div>
+                            <p class="text-sm text-gray-800">
+                                <span class="font-bold">{{ act.user.username }}</span>
+                                {% if act.type == 'requested' %}ขอยืม
+                                {% elif act.type == 'returned' %}คืน
+                                {% elif act.type == 'borrowed' %}กำลังยืม
+                                {% endif %}
+                                <span class="font-bold">{{ act.item.title }}</span>
+                            </p>
+                            <p class="text-xs text-gray-400">{{ act.time|timesince }} ที่แล้ว</p>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p class="text-sm text-gray-400 text-center py-4">ยังไม่มีกิจกรรม</p>
+                {% endif %}
+            </div>
+        </div><!-- end right -->
+    </div><!-- end flex -->
 
 </div>
 

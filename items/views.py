@@ -1,4 +1,6 @@
-from django.db import models 
+from django.db import models
+from decimal import Decimal
+from decimal import Decimal
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import authenticate, login, logout
@@ -117,23 +119,89 @@ def delete_item(request, item_id):
     return render(request, 'items/confirm_delete.html', {'item': item})
 
 @login_required
+def edit_item(request, item_id):
+    item = get_object_or_404(Item, item_id=item_id, owner=request.user)
+    categories = Category.objects.all()
+    if request.method == 'POST':
+        item.title = request.POST.get('title', '').strip()
+        item.description = request.POST.get('description', '').strip()
+        item.category_id = request.POST.get('category')
+        item.condition = request.POST.get('condition', 'good')
+        item.campus = request.POST.get('campus', 'rangsit')
+        item.pickup_location = request.POST.get('pickup_location', '')
+        item.is_free = request.POST.get('is_free') == 'true'
+        item.deposit_amount = request.POST.get('deposit_amount', 0) or 0
+        item.max_days = request.POST.get('max_days', 7) or 7
+        item.save()
+        return redirect('item_detail', item_id=item.item_id)
+    return render(request, 'items/edit_item.html', {'item': item, 'categories': categories})
+
+@login_required
 def dashboard(request):
+    my_borrowing = BorrowRequest.objects.filter(borrower=request.user).select_related('item', 'lender').order_by('-created_at')
+    incoming_requests = BorrowRequest.objects.filter(lender=request.user).select_related('item', 'borrower').order_by('-created_at')
+
+    activity = []
+    for req in incoming_requests:
+        if req.status == 'pending':
+            activity.append({'type': 'requested', 'user': req.borrower, 'item': req.item, 'time': req.created_at})
+        elif req.status in ['returning', 'returned']:
+            activity.append({'type': 'returned', 'user': req.borrower, 'item': req.item, 'time': req.approved_at or req.created_at})
+    for req in my_borrowing:
+        if req.status == 'approved':
+            activity.append({'type': 'borrowed', 'user': req.borrower, 'item': req.item, 'time': req.approved_at or req.created_at})
+
+    activity.sort(key=lambda x: x['time'], reverse=True)
+
     return render(request, 'items/dashboard.html', {
-        'my_borrowing': BorrowRequest.objects.filter(borrower=request.user).select_related('item', 'lender').order_by('-created_at'),
-        'incoming_requests': BorrowRequest.objects.filter(lender=request.user).select_related('item', 'borrower').order_by('-created_at'),
+        'my_borrowing': my_borrowing,
+        'incoming_requests': incoming_requests,
         'my_items': Item.objects.filter(owner=request.user).order_by('-created_at'),
         'my_active_items': Item.objects.filter(owner=request.user, status='borrowed').order_by('-created_at'),
         'pending_count': BorrowRequest.objects.filter(lender=request.user, status='pending').count(),
+        'activity': activity,
     })
 
 @login_required
 def create_request(request, item_id):
     item = get_object_or_404(Item, item_id=item_id)
     if request.method == 'POST':
-        BorrowRequest.objects.create(item=item, borrower=request.user, lender=item.owner, start_date=request.POST.get('start_date'), end_date=request.POST.get('end_date'), borrower_message=request.POST.get('message', ''))
+        start_date = request.POST.get('start_date')
+        end_date = request.POST.get('end_date')
+        message = request.POST.get('message', '')
+        if item.is_free and item.deposit_amount == 0:
+            BorrowRequest.objects.create(item=item, borrower=request.user, lender=item.owner,
+                start_date=start_date, end_date=end_date, borrower_message=message)
+            create_notification(item.owner, f"มีคนสนใจขอยืม {item.title}!")
+            return redirect('item_detail', item_id=item.item_id)
+        else:
+            request.session['pending_request'] = {'start_date': start_date, 'end_date': end_date, 'message': message}
+            return redirect('payment_review', item_id=item.item_id)
+    return render(request, 'items/request_form.html', {'item': item})
+
+@login_required
+def payment_review(request, item_id):
+    from datetime import date as date_type
+    item = get_object_or_404(Item, item_id=item_id)
+    pending = request.session.get('pending_request')
+    if not pending:
+        return redirect('create_request', item_id=item_id)
+    start = date_type.fromisoformat(pending['start_date'])
+    end = date_type.fromisoformat(pending['end_date'])
+    days = (end - start).days
+    deposit = item.deposit_amount
+    platform_fee = Decimal('0')
+    total = deposit
+    if request.method == 'POST':
+        BorrowRequest.objects.create(item=item, borrower=request.user, lender=item.owner,
+            start_date=pending['start_date'], end_date=pending['end_date'], borrower_message=pending.get('message', ''))
+        del request.session['pending_request']
         create_notification(item.owner, f"มีคนสนใจขอยืม {item.title}!")
         return redirect('item_detail', item_id=item.item_id)
-    return render(request, 'items/request_form.html', {'item': item})
+    return render(request, 'items/payment_review.html', {
+        'item': item, 'start_date': start, 'end_date': end,
+        'days': days, 'deposit': deposit, 'platform_fee': platform_fee, 'total': total,
+    })
 
 @login_required
 def approve_request(request, request_id):

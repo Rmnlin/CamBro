@@ -1,0 +1,66 @@
+{% extends 'base.html' %}
+{% block title %}ยืนยันการเช่า {{ item.title }} - CamBro{% endblock %}
+{% block content %}
+<div class="max-w-lg mx-auto px-4 py-8">
+
+    <h1 class="text-2xl font-black text-gray-900 mb-1">ตรวจสอบและยืนยัน</h1>
+    <p class="text-sm text-gray-400 mb-6">ยังไม่มีการเรียกเก็บเงิน — มัดจำถูกอายัดไว้ และค่าเช่าจะเรียกเก็บเมื่อเจ้าของอนุมัติ</p>
+
+    <!-- Item summary -->
+    <div class="flex items-center gap-4 mb-6 p-4 bg-white rounded-2xl border border-gray-100 shadow-sm">
+        {% if item.photo %}
+        <img src="{{ item.photo.url }}" class="w-16 h-16 rounded-xl object-cover">
+        {% else %}
+        <div class="w-16 h-16 bg-gray-100 rounded-xl flex items-center justify-center text-2xl">{{ item.category.icon }}</div>
+        {% endif %}
+        <div>
+            <p class="font-bold text-gray-900">{{ item.title }}</p>
+            <p class="text-xs text-gray-400">เจ้าของ: {{ item.owner.username }}</p>
+            <p class="text-xs text-gray-500 mt-1">{{ start_date|date:"d M Y" }} → {{ end_date|date:"d M Y" }} ({{ days }} วัน)</p>
+        </div>
+    </div>
+
+    <!-- Price breakdown -->
+    <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 mb-4">
+        <div class="space-y-3">
+            <div class="flex justify-between text-sm text-gray-700">
+                <span>มัดจำ <span class="text-gray-400">(คืนเมื่อส่งของคืน)</span></span>
+                <span class="font-semibold">{{ deposit|floatformat:0 }}฿</span>
+            </div>
+            <div class="flex justify-between text-sm text-gray-700">
+                <span>ค่าบริการแพลตฟอร์ม <span class="text-gray-400">(0%)</span></span>
+                <span class="font-semibold">{{ platform_fee|floatformat:2 }}฿</span>
+            </div>
+            <div class="border-t border-gray-100 pt-3 flex justify-between">
+                <span class="font-black text-gray-900">รวมทั้งหมด</span>
+                <span class="font-black text-gray-900 text-lg">{{ total|floatformat:2 }}฿</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- CamBro Protect -->
+    <div class="bg-emerald-50 border border-emerald-100 rounded-2xl px-5 py-4 mb-8 flex gap-3 items-start">
+        <span class="text-emerald-500 mt-0.5">✔</span>
+        <p class="text-sm text-emerald-700">
+            <span class="font-bold">ได้รับการคุ้มครองโดย CamBro Protect</span> —
+            ความเสียหายสูงสุด xxxx฿ ได้รับการชดเชย ข้อพิพาทได้รับการไกล่เกลี่ยภายใน 48 ชม. มัดจำคืนอัตโนมัติเมื่อส่งของคืนสำเร็จ
+        </p>
+    </div>
+
+    <!-- Actions -->
+    <div class="flex gap-3">
+        <a href="{% url 'create_request' item.item_id %}"
+           class="flex-1 text-center py-3 bg-gray-50 text-gray-500 rounded-2xl font-bold hover:bg-gray-100 transition border border-gray-100 text-sm">
+            ย้อนกลับ
+        </a>
+        <form method="post" class="flex-1">
+            {% csrf_token %}
+            <button type="submit"
+                class="w-full py-3 bg-main-blue text-white rounded-2xl font-black hover:bg-blue-400 transition shadow-lg shadow-blue-100 active:scale-95 text-sm">
+                ยืนยัน {{ total|floatformat:2 }}฿
+            </button>
+        </form>
+    </div>
+
+</div>
+{% endblock %}

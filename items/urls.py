@@ -6,6 +6,7 @@ urlpatterns = [
     path('items/', views.all_items, name='all_items'),
     path('items/<uuid:item_id>/', views.item_detail, name='item_detail'),
     path('items/<uuid:item_id>/request/', views.create_request, name='create_request'),
+    path('items/<uuid:item_id>/payment/', views.payment_review, name='payment_review'),
     path('requests/<uuid:request_id>/approve/', views.approve_request, name='approve_request'),
     path('dashboard/', views.dashboard, name='dashboard'),
     path('items/<uuid:item_id>/delete/', views.delete_item, name='delete_item'),
@@ -24,4 +25,5 @@ urlpatterns = [
     path('return-success/<uuid:request_id>/', views.return_completed, name='return_completed'),
     path('requests/<uuid:request_id>/review/', views.leave_review, name='leave_review'),
     path('profile/<str:username>/', views.profile_view, name='profile'),
+    path('items/<uuid:item_id>/edit/', views.edit_item, name='edit_item'),
 ]

@@ -2,7 +2,7 @@
 {% block title %}ขอยืม {{ item.title }} - CamBro{% endblock %}
 {% block content %}
 <div class="max-w-lg mx-auto px-4 py-8">
-    <div class="bg-white rounded-lg shadow p-6">
+    <div class="bg-white rounded-3xl shadow p-6">
         <h1 class="text-xl font-bold text-gray-900 mb-1">ขอยืมสิ่งของ</h1>
         <p class="text-gray-500 text-sm mb-6">{{ item.title }}</p>
 
@@ -41,4 +41,16 @@
         </form>
     </div>
 </div>
+
+<script>
+document.querySelector('[name="start_date"]').addEventListener('change', function() {
+    const start = new Date(this.value);
+    const max = new Date(this.value);
+    max.setDate(max.getDate() + {{ item.max_days }});
+    const endInput = document.querySelector('[name="end_date"]');
+    endInput.min = this.value;
+    endInput.max = max.toISOString().split('T')[0];
+    endInput.value = '';
+});
+</script>
 {% endblock %}

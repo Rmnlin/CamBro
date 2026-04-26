@@ -76,8 +76,16 @@
                 <div class="mb-4">
                     <p class="text-[10px] text-blue-400 font-bold uppercase tracking-wider mb-1">ค่ามัดจำ</p>
                     <p class="text-3xl font-black text-gray-900">
-                        {% if item.is_free %}ฟรี! <span class="text-sm font-normal text-gray-400">(ไม่มีมัดจำ)</span>
-                        {% else %}{{ item.deposit_amount|floatformat:0 }}฿ <span class="text-sm font-normal text-gray-400">/ ครั้ง</span>{% endif %}
+                        {% if item.is_free %}
+                            ฟรี!
+                            {% if item.deposit_amount > 0 %}
+                            <span class="text-sm font-normal text-gray-400">มัดจำ {{ item.deposit_amount|floatformat:0 }}฿</span>
+                            {% else %}
+                            <span class="text-sm font-normal text-gray-400">(ไม่มีมัดจำ)</span>
+                            {% endif %}
+                        {% else %}
+                            {{ item.deposit_amount|floatformat:0 }}฿ <span class="text-sm font-normal text-gray-400">/ ครั้ง</span>
+                        {% endif %}
                     </p>
                 </div>
                 <div class="flex justify-between text-sm mb-5 pb-4 border-b border-gray-50">
@@ -86,6 +94,10 @@
                 </div>
 
                 {% if user == item.owner %}
+                <a href="{% url 'edit_item' item.item_id %}"
+                    class="block w-full py-3 bg-gray-100 text-gray-700 rounded-2xl font-bold hover:bg-gray-200 transition text-center border border-gray-200 text-sm mb-2">
+                    แก้ไข
+                </a>
                 <a href="{% url 'delete_item' item.item_id %}"
                    class="block w-full py-3 bg-red-50 text-red-500 rounded-2xl font-bold hover:bg-red-100 transition text-center border border-red-100 text-sm">
                     ลบประกาศนี้
