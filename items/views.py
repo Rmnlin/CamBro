@@ -157,6 +157,7 @@ def dashboard(request):
         'my_items': Item.objects.filter(owner=request.user).order_by('-created_at'),
         'my_active_items': Item.objects.filter(owner=request.user, status='borrowed').order_by('-created_at'),
         'pending_count': BorrowRequest.objects.filter(lender=request.user, status='pending').count(),
+        'active_lending_count': BorrowRequest.objects.filter(lender=request.user, status__in=['approved', 'returning']).count(),
         'activity': activity,
     })
 

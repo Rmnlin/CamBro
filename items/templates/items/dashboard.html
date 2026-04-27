@@ -22,7 +22,7 @@
                 </button>
                 <button onclick="switchTab('lending')" id="tab-lending"
                     class="tab-btn px-5 py-2 rounded-xl text-sm font-bold transition text-gray-500">
-                    กำลังให้ยืม <span class="ml-1 text-xs text-gray-400">({{ incoming_requests.count }})</span>
+                    กำลังให้ยืม <span class="ml-1 text-xs text-gray-400">({{ active_lending_count }})</span>
                 </button>
                 <button onclick="switchTab('requests')" id="tab-requests"
                     class="tab-btn px-5 py-2 rounded-xl text-sm font-bold transition text-gray-500">
@@ -99,7 +99,7 @@
 
         <div class="space-y-4">
             {% for req in incoming_requests %}
-            {% if req.status != 'pending' %}
+            {% if req.status == 'approved' or req.status == 'returning' %}
             <div class="bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
                 <div class="flex justify-between items-start mb-4">
                     <div class="flex items-center gap-3">
