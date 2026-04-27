@@ -154,7 +154,15 @@
             <form method="POST">
                 {% csrf_token %}
 
-                <input type="hidden" name="rating" value="5">
+                <!-- Star Rating -->
+                <div class="flex gap-1 mb-4" id="star-row">
+                    {% for i in "12345" %}
+                    <button type="button" data-val="{{ forloop.counter }}" onclick="setRating({{ forloop.counter }})"
+                        class="star text-3xl text-gray-300 hover:text-yellow-400 transition leading-none">★</button>
+                    {% endfor %}
+                </div>
+                <input type="hidden" name="rating" id="rating-input" value="5">
+
                 <!-- Comment -->
                 <div class="bg-gray-50 rounded-2xl p-4 mb-5 border border-gray-100">
                     <textarea name="comment" placeholder="เขียนรีวิวสั้นๆ..." rows="3"
@@ -165,6 +173,16 @@
                     โพสต์รีวิว
                 </button>
             </form>
+            <script>
+            function setRating(val) {
+                document.getElementById('rating-input').value = val;
+                document.querySelectorAll('.star').forEach(s => {
+                    s.classList.toggle('text-yellow-400', parseInt(s.dataset.val) <= val);
+                    s.classList.toggle('text-gray-300', parseInt(s.dataset.val) > val);
+                });
+            }
+            setRating(5);
+            </script>
         </div>
     </section>
     {% endif %}
@@ -183,6 +201,11 @@
                 <div class="flex justify-between items-start mb-2">
                     <div>
                         <p class="font-bold text-gray-900 text-sm">{{ review.reviewer.username }}</p>
+                        <div class="flex gap-0.5 mt-1">
+                            {% for i in "12345" %}
+                            <span class="text-sm {% if forloop.counter <= review.rating %}text-yellow-400{% else %}text-gray-200{% endif %}">★</span>
+                            {% endfor %}
+                        </div>
                     </div>
                     <p class="text-xs text-gray-400">{{ review.created_at|timesince }} ที่แล้ว</p>
                 </div>
