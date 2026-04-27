@@ -42,7 +42,7 @@
     </form>
 
     <!-- Category Chips -->
-    <div class="flex gap-3 mb-6 overflow-x-auto pb-2">
+    <div class="flex flex-wrap gap-3 mb-6">
         <a href="{% url 'all_items' %}{% if selected_campus %}?campus={{ selected_campus }}{% endif %}"
            class="px-4 py-2 rounded-full transition whitespace-nowrap
                   {% if not selected_category %}bg-main-blue text-white shadow-sm{% else %}bg-gray-100 text-gray-600 hover:bg-gray-200{% endif %}">
